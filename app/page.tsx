@@ -14,6 +14,14 @@ const eras = ['All eras','Classic','Evergreen','Trending'] as const;
 type EraFilter = typeof eras[number];
 const classicIds = new Set(['snow','nightingale','berkeley','anscombe','minard','challenger','digest']);
 const trendingIds = new Set(['aircanada','agent-boundary','crowdstrike','ai-overviews','simplygo','mycity','netflix-llm-art','mcdonalds-ai']);
+type DiagramAsset = { src: string; alt: string; credit: string; creditUrl: string; license: string };
+const diagramAssets: Record<string, DiagramAsset> = {
+  minard: { src:'/diagrams/minard-original.png', alt:'Charles Minard’s 1869 flow map of Napoleon’s 1812 Russian campaign, showing army size, route and temperature', credit:'Charles Joseph Minard · Wikimedia Commons', creditUrl:'https://commons.wikimedia.org/wiki/File:Minard.png', license:'Public domain' },
+  snow: { src:'/diagrams/snow-original.jpg', alt:'John Snow’s 1854 map marking cholera deaths and water pumps around Broad Street in London', credit:'John Snow · Wikimedia Commons', creditUrl:'https://commons.wikimedia.org/wiki/File:Snow-cholera-map-1.jpg', license:'Public domain' },
+  nightingale: { src:'/diagrams/nightingale-original.jpg', alt:'Florence Nightingale’s polar-area diagrams comparing causes of mortality in the British Army', credit:'Florence Nightingale · Wikimedia Commons', creditUrl:'https://commons.wikimedia.org/wiki/File:Nightingale-mortality.jpg', license:'Public domain' },
+  challenger: { src:'/diagrams/challenger-original.jpg', alt:'Morton Thiokol history of O-ring damage in solid rocket motor field joints', credit:'Rogers Commission Report · NASA', creditUrl:'https://www.nasa.gov/history/rogersrep/v5p895.htm', license:'US government work' },
+};
+const recreatedIds = new Set(['anscombe','berkeley','digest','google-flu','netflix-art','axis','funnel','crowdstrike','ai-overviews','simplygo','mycity','zillow']);
 
 const cases: CaseStudy[] = [
   { id:'minard', topic:'Visualisation', week:'W08–09', era:'Classic', title:'Six variables, one unforgettable map', setting:'Napoleon’s Russian campaign · chart published 1869', context:'Charles Joseph Minard fused geography, army size, direction, distance, time and temperature into a single flow map of the disastrous 1812 campaign.', evidence:'The band begins with roughly 422,000 troops and narrows relentlessly. The returning path is aligned with falling temperatures, letting readers see attrition as a journey rather than a single total.', takeaway:'A visual can explain a system when every encoding serves the same question.', trap:'Calling a dense graphic “good” because it is famous. Its success depends on a focused story and careful reading, not complexity alone.', decision:'A modern analyst must decide what to layer together and what to separate for an audience with less time or context.', question:'Which encoding carries the main argument?', answer:'Width. It makes the loss of people physically dominate the page; geography and temperature explain when and where that loss unfolded.', keyNumbers:[{value:'6',label:'variables integrated'},{value:'1869',label:'publication year'},{value:'1812',label:'campaign depicted'}], tags:['multivariate','flow map','history'], source:'École des Ponts · Minard digital collection', sourceUrl:'https://heritage.ecoledesponts.fr/collections/charles-joseph-minard', color:'lime' },
@@ -155,7 +163,7 @@ export default function Home() {
 function CaseCard({ item, index, onOpen }: { item: CaseStudy; index: number; onOpen: () => void }) {
   return <article className={`caseCard ${item.color}`}>
     <div className="cardTop"><span>{String(index + 1).padStart(2,'0')}</span><div><em className={`eraBadge ${getEra(item).toLowerCase()}`}>{getEra(item) === 'Trending' ? '2024–26' : getEra(item)}</em><span>{item.week}</span></div></div>
-    <div className="cardVisual" aria-hidden="true"><Visual type={index % 5} /></div>
+    <div className="cardVisual"><CaseVisual item={item} type={index % 5} compact /></div>
     <p className="cardTopic">{item.topic}</p><h3>{item.title}</h3><p className="cardSetting">{item.setting}</p>
     <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
     <button onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button>
@@ -175,6 +183,7 @@ function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void })
     <article className={`caseDrawer ${item.color}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
       <button className="drawerClose" onClick={onClose} aria-label="Close case">×</button>
       <p className="caseKicker">{getEra(item).toUpperCase()} · {item.week} · {item.topic}</p><h2 id="drawer-title">{item.title}</h2><p className="drawerSetting">{item.setting}</p>
+      {(diagramAssets[item.id] || recreatedIds.has(item.id)) && <EvidenceFigure item={item} />}
       {item.keyNumbers && <div className="keyNumbers">{item.keyNumbers.map((number) => <div key={`${number.value}-${number.label}`}><strong>{number.value}</strong><span>{number.label}</span></div>)}</div>}
       <div className="drawerSections">
         {item.context && <section><span>CASE CONTEXT</span><p>{item.context}</p></section>}
@@ -189,6 +198,51 @@ function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void })
   </div>;
 }
 
+function EvidenceFigure({ item }: { item: CaseStudy }) {
+  const original = diagramAssets[item.id];
+  return <figure className="evidenceFigure">
+    <div className="evidenceCanvas"><CaseVisual item={item} type={visualIndex(item.id)} /></div>
+    <figcaption>
+      <span>{original ? 'ORIGINAL DIAGRAM' : 'DATA-FAITHFUL RECREATION'}</span>
+      {original ? <a href={original.creditUrl} target="_blank" rel="noreferrer">{original.credit} · {original.license} ↗</a> : <a href={item.sourceUrl} target="_blank" rel="noreferrer">Recreated for legibility from the cited case source ↗</a>}
+    </figcaption>
+  </figure>;
+}
+
+function CaseVisual({ item, type, compact = false }: { item: CaseStudy; type: number; compact?: boolean }) {
+  const original = diagramAssets[item.id];
+  if (original) return <div className={`originalDiagram ${compact ? 'compact' : ''}`}><img src={original.src} alt={compact ? '' : original.alt} /><span>Original · {original.license}</span></div>;
+  if (recreatedIds.has(item.id)) return <RecreatedDiagram id={item.id} compact={compact} />;
+  return <div aria-hidden="true"><Visual type={type} /></div>;
+}
+
+function RecreatedDiagram({ id, compact }: { id: string; compact: boolean }) {
+  if (id === 'anscombe') return <AnscombeDiagram compact={compact} />;
+  if (id === 'berkeley') return <div className="reDiagram berkeleyDiagram"><span>AGGREGATE</span><div><i style={{width:'44%'}} /> <b>Men 44%</b></div><div><i style={{width:'35%'}} /> <b>Women 35%</b></div><strong>Group by department → relationship changes</strong><em>Recreated</em></div>;
+  if (id === 'digest') return <div className="reDiagram digestDiagram"><span>1936 POLL</span><div><i style={{height:'57%'}}><b>Landon</b></i><i style={{height:'43%'}}><b>Roosevelt</b></i></div><strong>2.4m replies ≠ representative sample</strong><em>Recreated</em></div>;
+  if (id === 'google-flu') return <div className="reDiagram fluDiagram"><span>2012–13 PEAK</span><div className="fluGrid"><i className="actual" /><i className="estimate" /></div><p><b>CDC baseline</b><b>GFT estimate ≈ 2×</b></p><em>Recreated</em></div>;
+  if (id === 'netflix-art') return <div className="reDiagram netflixDiagram"><span>SAME TITLE · DIFFERENT ART</span><div><i>A</i><i>B</i><i>C</i></div><strong>Randomise member → measure downstream</strong><em>Concept recreation</em></div>;
+  if (id === 'axis') return <div className="reDiagram axisDiagram"><span>TRUST SCORE</span><div><i style={{height:'74%'}}>81</i><i style={{height:'43%'}}>78</i></div><strong>Axis begins at 77</strong><em>Recreated</em></div>;
+  if (id === 'funnel') return <div className="reDiagram funnelDiagram"><span>CAMPAIGN FUNNEL</span><i>12,400 visits</i><i>3,170 carts</i><i>294 sales</i><strong>Clicks rose · sales fell</strong><em>Recreated</em></div>;
+  if (id === 'crowdstrike') return <div className="reDiagram pipelineDiagram"><span>RELEASE PIPELINE</span><div><i>Update</i><b>→</b><i className="danger">Global</i><b>→</b><i>Outage</i></div><strong>Missing: staged canary + halt signal</strong><em>Recreated</em></div>;
+  if (id === 'ai-overviews') return <div className="reDiagram overviewDiagram"><span>SOURCE QUALITY</span><div><i>Satire</i><b>+</b><i>Query</i><b>→</b><i className="danger">Certain answer</i></div><strong>Grounded can still be wrong</strong><em>Recreated</em></div>;
+  if (id === 'simplygo') return <div className="reDiagram simplygoDiagram"><span>FARE-GATE MOMENT</span><div><b>$?.??</b><i>BALANCE NOT SHOWN</i></div><strong>One missing glance changed trust</strong><em>Recreated</em></div>;
+  if (id === 'mycity') return <div className="reDiagram latencyDiagram"><span>P90 RESPONSE TIME</span><div><i style={{width:'78%'}}>12.4s</i><i style={{width:'100%'}}>16.2s</i></div><strong>Correctness × latency × recourse</strong><em>Recreated</em></div>;
+  if (id === 'zillow') return <div className="reDiagram zillowDiagram"><span>UNIT ECONOMICS</span><div><i>Q2</i><b>1,200 bps swing</b><i>Q4</i></div><strong>Forecast error became inventory risk</strong><em>Recreated</em></div>;
+  return null;
+}
+
+const anscombeData = [
+  [[10,8.04],[8,6.95],[13,7.58],[9,8.81],[11,8.33],[14,9.96],[6,7.24],[4,4.26],[12,10.84],[7,4.82],[5,5.68]],
+  [[10,9.14],[8,8.14],[13,8.74],[9,8.77],[11,9.26],[14,8.10],[6,6.13],[4,3.10],[12,9.13],[7,7.26],[5,4.74]],
+  [[10,7.46],[8,6.77],[13,12.74],[9,7.11],[11,7.81],[14,8.84],[6,6.08],[4,5.39],[12,8.15],[7,6.42],[5,5.73]],
+  [[8,6.58],[8,5.76],[8,7.71],[8,8.84],[8,8.47],[8,7.04],[8,5.25],[19,12.50],[8,5.56],[8,7.91],[8,6.89]],
+];
+
+function AnscombeDiagram({ compact }: { compact: boolean }) {
+  return <div className={`reDiagram anscombeDiagram ${compact ? 'compact' : ''}`}><span>SAME SUMMARY · FOUR SHAPES</span><div>{anscombeData.map((series, index) => <section key={index}>{series.map(([x,y], point) => <i key={point} style={{left:`${((x-3)/17)*100}%`,bottom:`${((y-2)/12)*100}%`}} />)}</section>)}</div><strong>Mean ≈ 7.5 · correlation ≈ .82</strong><em>Exact-data recreation</em></div>;
+}
+
 function topicForWeek(index: number) {
   return ['Foundations','AI agents','Data preparation','Statistical interpretation','Web analytics','Visualisation','Data stories','AI agents','Forecasting','Campaign decisions'][index];
 }
@@ -198,4 +252,8 @@ function getEra(item: CaseStudy): Exclude<EraFilter, 'All eras'> {
   if (classicIds.has(item.id)) return 'Classic';
   if (trendingIds.has(item.id)) return 'Trending';
   return 'Evergreen';
+}
+
+function visualIndex(id: string) {
+  return Array.from(id).reduce((total, char) => total + char.charCodeAt(0), 0) % 5;
 }

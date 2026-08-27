@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type CaseStudy = {
   id: string; topic: string; week: string; title: string; setting: string; takeaway: string;
@@ -22,6 +22,9 @@ const diagramAssets: Record<string, DiagramAsset> = {
   challenger: { src:'/diagrams/challenger-original.jpg', alt:'Morton Thiokol history of O-ring damage in solid rocket motor field joints', credit:'Rogers Commission Report · NASA', creditUrl:'https://www.nasa.gov/history/rogersrep/v5p895.htm', license:'US government work' },
 };
 const recreatedIds = new Set(['anscombe','berkeley','digest','google-flu','netflix-art','axis','funnel','crowdstrike','ai-overviews','simplygo','mycity','zillow']);
+const dataFaithfulIds = new Set(['anscombe','berkeley','digest','google-flu','mycity']);
+const workedScenarioIds = new Set(['agent-boundary','categories','abtest','funnel','attribution','axis','choropleth','museum','shock','benefits','campaign']);
+const dataIllustrationIds = new Set(['commute','rainfall']);
 
 const cases: CaseStudy[] = [
   { id:'minard', topic:'Visualisation', week:'W08–09', era:'Classic', title:'Six variables, one unforgettable map', setting:'Napoleon’s Russian campaign · chart published 1869', context:'Charles Joseph Minard fused geography, army size, direction, distance, time and temperature into a single flow map of the disastrous 1812 campaign.', evidence:'The band begins with roughly 422,000 troops and narrows relentlessly. The returning path is aligned with falling temperatures, letting readers see attrition as a journey rather than a single total.', takeaway:'A visual can explain a system when every encoding serves the same question.', trap:'Calling a dense graphic “good” because it is famous. Its success depends on a focused story and careful reading, not complexity alone.', decision:'A modern analyst must decide what to layer together and what to separate for an audience with less time or context.', question:'Which encoding carries the main argument?', answer:'Width. It makes the loss of people physically dominate the page; geography and temperature explain when and where that loss unfolded.', keyNumbers:[{value:'6',label:'variables integrated'},{value:'1869',label:'publication year'},{value:'1812',label:'campaign depicted'}], tags:['multivariate','flow map','history'], source:'École des Ponts · Minard digital collection', sourceUrl:'https://heritage.ecoledesponts.fr/collections/charles-joseph-minard', color:'lime' },
@@ -31,9 +34,9 @@ const cases: CaseStudy[] = [
   { id:'google-flu', topic:'Forecasting', week:'W12', era:'Evergreen', title:'When search behaviour impersonated disease', setting:'Google Flu Trends · 2008–2014', context:'Google Flu Trends tried to estimate influenza activity faster than clinical reporting by using patterns in search queries.', evidence:'A 2014 Science critique documented persistent over-prediction and “big data hubris”: search behaviour, media attention and platform changes could move even when actual illness did not.', takeaway:'A high-volume proxy is not the phenomenon—and the proxy’s meaning can drift.', trap:'Validating once, then treating the measurement relationship as permanent while the platform changes underneath it.', decision:'Combine timely proxy data with slower ground truth, benchmark against simple models and monitor residuals for drift.', question:'What is the hidden time series in this case?', answer:'The search platform itself. Ranking, autocomplete, media coverage and user habits all change the data-generating process.', keyNumbers:[{value:'2008',label:'public launch'},{value:'2014',label:'landmark critique'},{value:'2×',label:'reported peak overestimate'}], tags:['proxy data','drift','nowcasting'], source:'PubMed · The Parable of Google Flu', sourceUrl:'https://pubmed.ncbi.nlm.nih.gov/24626916/', color:'lime' },
   { id:'cambridge', topic:'Campaign decisions', week:'W13', era:'Evergreen', title:'The targeting dataset people never agreed to build', setting:'Cambridge Analytica and Facebook data · 2014–2019', context:'A personality-quiz app collected data from users and, under platform rules at the time, information connected to their friends. Those data fed political profiling and targeting work.', evidence:'The US Federal Trade Commission concluded that Cambridge Analytica used deceptive representations concerning the collection and use of Facebook data.', takeaway:'A campaign can be analytically sophisticated and still fail the legitimacy test.', trap:'Reducing ethics to legal compliance or assuming public data is automatically fair game for a new purpose.', decision:'Before targeting, define consent, purpose limitation, sensitive proxies, contestability and who bears harm if the model is wrong.', question:'Which question comes before “Does the model work?”', answer:'“Should this dataset and intervention exist for this purpose?” Technical performance cannot legitimise deceptive collection.', keyNumbers:[{value:'2014',label:'app collection began'},{value:'2019',label:'FTC final action'},{value:'purpose',label:'must be bounded'}], tags:['privacy','political communication','consent'], source:'US FTC · Cambridge Analytica matter', sourceUrl:'https://www.ftc.gov/legal-library/browse/cases-proceedings/182-3107-cambridge-analytica-llc-matter', color:'orange' },
   { id:'zillow', topic:'Forecasting', week:'W12', era:'Evergreen', title:'A forecast became inventory—and balance-sheet risk', setting:'Zillow Offers wind-down · 2021', context:'Zillow bought homes directly, making future price forecasts operational: errors determined purchase prices, renovation plans, inventory and capital exposure.', evidence:'Zillow said the unpredictability of home-price forecasting exceeded what it anticipated and that scaling would create excessive earnings and balance-sheet volatility.', takeaway:'Forecast error changes meaning when a prediction triggers an irreversible, capital-intensive action.', trap:'Reporting average model accuracy while ignoring tail errors, correlated market shifts and exposure at scale.', decision:'Tie model evaluation to the cost distribution of being wrong, capacity constraints and an explicit stop rule.', question:'Why can a reasonably accurate model still make a bad business?', answer:'Because asymmetric errors, correlated shocks and scale can turn a minority of misses into inventory and cash-flow losses larger than the gains.', keyNumbers:[{value:'1,200 bps',label:'unit-economics swing cited'},{value:'2021',label:'operations wound down'},{value:'scale',label:'amplified exposure'}], tags:['forecast risk','operations','model limits'], source:'Zillow · Q3 2021 shareholder letter', sourceUrl:'https://s24.q4cdn.com/723050407/files/doc_financials/2021/q3/Zillow-Group-Q3%2721-Shareholder-Letter.pdf', color:'blue' },
-  { id:'crowdstrike', topic:'Data preparation', week:'W03', era:'Trending', title:'One content update, millions of broken workflows', setting:'CrowdStrike Windows outage · July 2024', context:'CrowdStrike distributed a Rapid Response Content configuration update to Windows hosts. A mismatch and validation failure triggered system crashes across dependent organisations.', evidence:'The company’s root-cause analysis described the update path and subsequent changes including staged deployment, additional validation and third-party review.', takeaway:'A transformation pipeline needs release validation, canaries, observability and rollback—not confidence in past success.', trap:'Calling this merely a coding bug. The teaching value is the socio-technical pipeline: tests, rollout scope, monitoring and recovery all shaped impact.', decision:'Choose what must be validated before release, which cohort receives the change first and what signal automatically halts propagation.', question:'What is the analytics analogue of a canary release?', answer:'Apply a cleaning rule or agent workflow to a small, representative subset; reconcile rows, totals and outputs before scaling it to the full dataset.', keyNumbers:[{value:'04:09 UTC',label:'update published'},{value:'2024',label:'global incident'},{value:'staged',label:'safer rollout principle'}], tags:['validation','rollout','blast radius'], source:'CrowdStrike · Root Cause Analysis', sourceUrl:'https://www.crowdstrike.com/wp-content/uploads/2024/08/Channel-File-291-Incident-Root-Cause-Analysis-08.06.2024.pdf', color:'coral' },
+  { id:'crowdstrike', topic:'Data preparation', week:'W03', era:'Trending', title:'One content update, a global workflow failure', setting:'CrowdStrike Windows outage · July 2024', context:'CrowdStrike distributed a Rapid Response Content configuration update to Windows hosts. A mismatch and validation failure triggered system crashes across dependent organisations.', evidence:'The company’s root-cause analysis described the update path and subsequent changes including staged deployment, additional validation and third-party review.', takeaway:'A transformation pipeline needs release validation, canaries, observability and rollback—not confidence in past success.', trap:'Calling this merely a coding bug. The teaching value is the socio-technical pipeline: tests, rollout scope, monitoring and recovery all shaped impact.', decision:'Choose what must be validated before release, which cohort receives the change first and what signal automatically halts propagation.', question:'What is the analytics analogue of a canary release?', answer:'Apply a cleaning rule or agent workflow to a small, representative subset; reconcile rows, totals and outputs before scaling it to the full dataset.', keyNumbers:[{value:'04:09 UTC',label:'update published'},{value:'2024',label:'global incident'},{value:'staged',label:'safer rollout principle'}], tags:['validation','rollout','blast radius'], source:'CrowdStrike · Root Cause Analysis', sourceUrl:'https://www.crowdstrike.com/wp-content/uploads/2024/08/Channel-File-291-Incident-Root-Cause-Analysis-08.06.2024.pdf', color:'coral' },
   { id:'ai-overviews', topic:'AI agents', week:'W02', era:'Trending', title:'When the source was satire, but the answer sounded certain', setting:'Google AI Overviews rollout · May 2024', context:'AI-generated summaries were rolled out broadly in US Search. Users surfaced odd or inaccurate answers, while fabricated screenshots complicated diagnosis.', evidence:'Google said some results misinterpreted queries or web language, then added more than a dozen technical improvements including restrictions on satire, user-generated content and nonsensical queries.', takeaway:'Grounding is not enough if source quality, context and abstention are weak.', trap:'Fixing viral examples one by one rather than identifying failure classes and measuring them systematically.', decision:'Define when the system should answer, cite, defer to conventional search or refuse—especially for health and safety topics.', question:'What should a launch dashboard separate?', answer:'Confirmed model failures, source-quality failures, unsafe-query failures and fake reports. Each needs a different denominator and remedy.', keyNumbers:[{value:'12+',label:'technical improvements'},{value:'May 2024',label:'broad US rollout'},{value:'abstain',label:'valid system action'}], tags:['grounding','source quality','abstention'], source:'Google · AI Overviews: what happened', sourceUrl:'https://blog.google/products-and-platforms/products/search/ai-overviews-update-may-2024/', color:'lime' },
-  { id:'simplygo', topic:'Campaign decisions', week:'W13', era:'Trending', title:'A technically sound migration met the wrong commuter insight', setting:'Singapore SimplyGo reversal · January 2024', context:'The planned retirement of legacy adult fare cards met strong public concern, including the loss of instant fare and balance displays at station gates.', evidence:'The Ministry of Transport reversed the mandatory transition, acknowledged a judgment error and kept the legacy system while improving migration support.', takeaway:'Usage data cannot substitute for understanding which moments make a service feel trustworthy.', trap:'Interpreting adoption counts as acceptance while missing a small, repeated interaction that anchors user confidence.', decision:'Combine operational costs and migration progress with observation, complaints, accessibility needs and qualitative research before mandating change.', question:'What metric was probably missing from the executive dashboard?', answer:'A direct measure of confidence at the gate: whether commuters can verify the fare immediately in the moment they need it.', keyNumbers:[{value:'2024',label:'planned transition'},{value:'1 glance',label:'critical user moment'},{value:'2030',label:'legacy support horizon stated'}], tags:['Singapore','service design','qualitative data'], source:'Singapore MOT · Parliamentary reply on SimplyGo', sourceUrl:'https://www.mot.gov.sg/news-resources/newsroom/oral-reply-by-minister-for-transport-chee-hong-tat-to-parliamentary-questions-on-simplygo/', color:'blue' },
+  { id:'simplygo', topic:'Campaign decisions', week:'W13', era:'Trending', title:'When adoption data missed a commuter need', setting:'Singapore SimplyGo reversal · January 2024', context:'The planned retirement of legacy adult fare cards met strong public concern, including the loss of instant fare and balance displays at station gates.', evidence:'The Ministry of Transport said it had underestimated how strongly some commuters preferred seeing fares and balances immediately, then reversed the mandatory transition and retained the legacy system.', takeaway:'Usage data cannot substitute for understanding which moments make a service feel trustworthy.', trap:'Interpreting adoption counts as acceptance while missing a small, repeated interaction that anchors user confidence.', decision:'Combine operational costs and migration progress with observation, complaints, accessibility needs and qualitative research before mandating change.', question:'Which measure would have tested the decision more directly?', answer:'A direct measure of the need to verify fares and balances at the gate, segmented by commuter group—not adoption alone.', keyNumbers:[{value:'64%',label:'adult commuters on ABT in Dec 2023'},{value:'1 glance',label:'critical user moment'},{value:'2030',label:'legacy support horizon stated'}], tags:['Singapore','service design','qualitative data'], source:'Singapore MOT · Parliamentary reply on SimplyGo', sourceUrl:'https://www.mot.gov.sg/news-resources/newsroom/oral-reply-by-minister-for-transport-chee-hong-tat-to-parliamentary-questions-on-simplygo/', color:'blue' },
   { id:'mycity', topic:'AI agents', week:'W02', era:'Trending', title:'The civic chatbot that needed an audit, not a disclaimer', setting:'New York City MyCity audit · 2026', context:'MyCity was built to help residents and businesses navigate services. Its chatbot operated in a domain where incorrect guidance could affect legal or financial decisions.', evidence:'A 2026 city comptroller audit reported hallucination concerns, response-time problems and wider questions about technical, economic, legal and operational feasibility.', takeaway:'Public-sector agents need measurable accuracy, latency, escalation and accountability targets before scale.', trap:'Treating a disclaimer as a control. Warning users that a system may be wrong does not make high-stakes misinformation safe.', decision:'Set test suites from real user tasks, publish thresholds, log sources, create human escalation and define a shutdown condition.', question:'Which two metrics belong together?', answer:'Answer correctness and task latency. A correct answer that arrives too slowly—or a fast answer that is wrong—both fail the service.', keyNumbers:[{value:'12.4–16.2s',label:'reported P90 responses'},{value:'2026',label:'audit published'},{value:'human',label:'required escalation path'}], tags:['public service','audit','latency'], source:'NYC Comptroller · MyCity audit', sourceUrl:'https://comptroller.nyc.gov/reports/audit-report-on-the-new-york-city-office-of-technology-and-innovations-mycity-system/', color:'orange' },
   { id:'netflix-llm-art', topic:'Web analytics', week:'W05–06', era:'Trending', title:'Can an LLM predict which artwork you will choose?', setting:'Netflix artwork research · 2026', context:'Netflix researchers tested post-trained language models on structured descriptions of members, titles and candidate artwork to improve personalised artwork selection.', evidence:'The published study reports training on 110,000 data points, evaluation on 5,000 held-out examples and 3–5% improvements over a production model in the reported experiments.', takeaway:'Offline model gains are evidence for a candidate—not proof of better member outcomes.', trap:'Confusing held-out predictive performance with causal lift, or optimising clicks without fairness and satisfaction guardrails.', decision:'Use offline evaluation to screen candidates, then pre-register an online experiment with member-level outcomes and long-term guardrails.', question:'What must happen before “3–5% better” becomes a product claim?', answer:'Clarify the metric and baseline, reproduce the holdout result, then run an online randomised test measuring actual member behaviour and downstream quality.', keyNumbers:[{value:'110k',label:'training examples'},{value:'5k',label:'held-out examples'},{value:'3–5%',label:'reported improvement'}], tags:['LLM','offline vs online','personalisation'], source:'Netflix Research · Artwork Personalization via LLM Post-training', sourceUrl:'https://arxiv.org/abs/2601.02764', color:'coral' },
   { id:'mcdonalds-ai', topic:'AI agents', week:'W02', era:'Trending', title:'The drive-thru pilot that stopped before scale', setting:'McDonald’s and IBM voice ordering · 2021–2024', context:'McDonald’s tested automated order taking at more than 100 drive-thrus, a noisy real-world environment with accents, overlapping voices and highly variable orders.', evidence:'The company ended the specific IBM test in 2024 while saying voice ordering still had future potential. Public reports documented conspicuous order failures and customer complaints.', takeaway:'Ending a pilot can be good evidence practice when the current system is not ready for the operating environment.', trap:'Declaring AI a total failure—or a future certainty—without seeing the test criteria, error distribution and human fallback performance.', decision:'Segment errors by accent, noise, order complexity and harm; compare speed and accuracy with a human-assisted baseline before choosing to scale, redesign or stop.', question:'Which average could hide the real product risk?', answer:'Overall order accuracy. Rare but severe basket errors, systematic failures for speech groups and staff intervention time need separate measures.', keyNumbers:[{value:'100+',label:'restaurants in test'},{value:'2024',label:'test ended'},{value:'severity',label:'matters beyond mean error'}], tags:['pilot','speech AI','segmentation'], source:'Associated Press · McDonald’s ends AI drive-thru test', sourceUrl:'https://apnews.com/article/bebc898363f2d550e1a0cd3c682fa234', color:'lime' },
@@ -91,7 +94,7 @@ export default function Home() {
           <h1>Don’t just read<br />the chart. <em>Question it.</em></h1>
           <p className="lede">Classic lessons, evergreen patterns and current cases from the data decisions hiding in campaigns, dashboards, queues, clicks and everyday life.</p>
           <a className="primaryButton" href="#casebook">Open the evidence lab <span>↘</span></a>
-          <div className="heroStats"><span><strong>{cases.length}</strong> field cases</span><span><strong>9</strong> course topics</span><span><strong>1</strong> rule: verify</span></div>
+          <div className="heroStats"><span><strong>{cases.length}</strong> cases &amp; scenarios</span><span><strong>9</strong> course topics</span><span><strong>1</strong> rule: verify</span></div>
         </div>
         <div className="heroVisual" aria-label="A bar chart with a misleading truncated axis">
           <div className="chartNote">Looks convincing.<br /><strong>Is it true?</strong></div>
@@ -103,11 +106,11 @@ export default function Home() {
       <section className="ticker" aria-label="Course themes"><div>COLLECT <span>◆</span> CLEAN <span>◆</span> QUESTION <span>◆</span> VISUALISE <span>◆</span> DECIDE <span>◆</span> VERIFY THE AGENT <span>◆</span> COLLECT <span>◆</span> CLEAN <span>◆</span></div></section>
 
       <section className="casebook" id="casebook">
-        <div className="sectionIntro"><p className="eyebrow dark"><span /> THE CASEBOOK</p><h2>Real data.<br />Messy decisions.</h2><p>Move from landmark cases to current practice. Every detailed case links evidence to a decision, a failure mode and a question for the room.</p></div>
+        <div className="sectionIntro"><p className="eyebrow dark"><span /> THE CASEBOOK</p><h2>Real cases.<br />Honest limits.</h2><p>Documented cases, data-backed illustrations and worked scenarios are labelled separately—so the evidence never claims more than its source.</p></div>
         <div className="eraGuide" aria-label="Case study eras">
-          <button onClick={() => setEra('Classic')}><span>01</span><strong>Classic</strong><p>Landmark cases that established how analysts see, sample and communicate.</p><em>{cases.filter((item) => getEra(item) === 'Classic').length} cases →</em></button>
-          <button onClick={() => setEra('Evergreen')}><span>02</span><strong>Evergreen</strong><p>Reusable patterns in experiments, platforms, forecasts, privacy and strategy.</p><em>{cases.filter((item) => getEra(item) === 'Evergreen').length} cases →</em></button>
-          <button onClick={() => setEra('Trending')}><span>03</span><strong>Trending now</strong><p>Verified 2024–2026 developments, with recent sources and live relevance.</p><em>{cases.filter((item) => getEra(item) === 'Trending').length} cases →</em></button>
+          <button onClick={() => { setEra('Classic'); setTopic('All topics'); setSearch(''); }}><span>01</span><strong>Classic</strong><p>Landmark cases that established how analysts see, sample and communicate.</p><em>{cases.filter((item) => getEra(item) === 'Classic').length} cases →</em></button>
+          <button onClick={() => { setEra('Evergreen'); setTopic('All topics'); setSearch(''); }}><span>02</span><strong>Evergreen</strong><p>Reusable patterns in experiments, platforms, forecasts, privacy and strategy.</p><em>{cases.filter((item) => getEra(item) === 'Evergreen').length} cases →</em></button>
+          <button onClick={() => { setEra('Trending'); setTopic('All topics'); setSearch(''); }}><span>03</span><strong>Trending now</strong><p>Verified 2024–2026 developments, with recent sources and live relevance.</p><em>{cases.filter((item) => getEra(item) === 'Trending').length} cases →</em></button>
         </div>
         <div className="filterBar">
           <label className="searchBox"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search cases, settings or skills…" aria-label="Search cases" /></label>
@@ -120,30 +123,31 @@ export default function Home() {
         <div className="topicChips" aria-label="Filter by topic">{topics.map((item) => <button key={item} className={topic === item ? 'active' : ''} onClick={() => setTopic(item)} aria-pressed={topic === item}>{item}</button>)}</div>
         <p className="resultCount">Showing {filtered.length} of {cases.length} cases · {era === 'All eras' ? 'all eras' : era}</p>
         <div className="caseGrid">
-          {filtered.map((item, index) => <CaseCard key={item.id} item={item} index={index} onOpen={() => setSelected(item)} />)}
+          {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.indexOf(item)} onOpen={() => setSelected(item)} />)}
         </div>
         {filtered.length === 0 && <div className="emptyState"><strong>No evidence found.</strong><p>Try another keyword or reset the filters.</p><button onClick={() => { setTopic('All topics'); setEra('All eras'); setSearch(''); }}>Reset the lab</button></div>}
       </section>
 
       <section className="path" id="path">
         <div className="pathHeading"><p className="eyebrow"><span /> YOUR COURSE PATH</p><h2>From raw data<br />to responsible action.</h2><p>Each stop adds a new question. The red thread never changes: what did the agent do, and how do you know it is right?</p></div>
-        <div className="weekRail">{weeks.map(([number,label], index) => <a key={number} href="#casebook" onClick={() => setTopic(topicForWeek(index))}><span>{number}</span><strong>{label}</strong><i>{index === weeks.length - 1 ? 'Pitch it' : 'Explore'}</i></a>)}</div>
+        <div className="weekRail">{weeks.map(([number,label], index) => <a key={number} href="#casebook" onClick={() => { setTopic(topicForWeek(index)); setEra('All eras'); setSearch(''); }}><span>{number}</span><strong>{label}</strong><i>{index === weeks.length - 1 ? 'Pitch it' : 'Explore'}</i></a>)}</div>
       </section>
 
       <section className="challenge" id="challenge">
         <div className="challengeCard">
           <p className="eyebrow dark"><span /> 60-SECOND CHALLENGE</p>
-          <span className="challengeNumber">#01</span>
-          <h2>Which headline<br />can the data support?</h2>
-          <div className="experiment"><div><strong>A</strong><span>2,010 visitors</span><em>4.0% signed up</em></div><div><strong>B</strong><span>1,980 visitors</span><em>4.4% signed up</em></div></div>
+          <h2>Which statement<br />is best supported?</h2>
+          <p className="experimentContext">Visitors were randomly assigned once during the same seven-day period. Tracking passed QA. The primary metric was account creation within 24 hours.</p>
+          <div className="experiment"><div><strong>A</strong><span>80 / 2,010 signed up</span><em>3.98%</em></div><div><strong>B</strong><span>87 / 1,980 signed up</span><em>4.39%</em></div></div>
+          <p className="experimentRule"><strong>Decision rule:</strong> ship only if the 95% interval is entirely above +0.5 percentage points and guardrails hold.</p>
           <div className="answers">
             {[
-              ['A','Version B increased sign-ups by 10%.'],
-              ['B','Version B is definitely the better design.'],
-              ['C','B’s observed rate is higher; uncertainty and practical value still need checking.'],
+              ['A','B caused a reliable 10.4% lift.'],
+              ['B','B is the clear winner and should ship.'],
+              ['C','In this sample, B was 0.41 points higher; the experiment is inconclusive.'],
             ].map(([letter,label]) => <button key={letter} className={quizAnswer === letter ? 'chosen' : ''} onClick={() => setQuizAnswer(letter)}><span>{letter}</span>{label}</button>)}
           </div>
-          {quizAnswer && <div className={quizAnswer === 'C' ? 'feedback correct' : 'feedback'} role="status"><strong>{quizAnswer === 'C' ? 'Defensible.' : 'Too confident.'}</strong><p>{quizAnswer === 'C' ? 'The sample shows an observed difference, but you still need an uncertainty interval, a test plan and a business threshold.' : 'The result describes this sample. It does not yet prove the design caused a reliable or worthwhile improvement.'}</p></div>}
+          {quizAnswer && <div className={quizAnswer === 'C' ? 'feedback correct' : 'feedback'} role="status"><strong>{quizAnswer === 'C' ? 'Best supported.' : 'Too confident.'}</strong><p>{quizAnswer === 'C' ? 'B is +0.41 percentage points (+10.4% relative), but an approximate 95% interval runs from −0.83 to +1.66 points (p ≈ .51). The result does not meet the stated shipping rule.' : 'The observed relative difference is 10.4%, but the estimate is imprecise. This experiment does not establish a reliable effect or meet the stated shipping rule.'}</p></div>}
         </div>
         <aside className="fieldRule"><span>FIELD RULE 04</span><blockquote>“An honest chart shows what you know—and leaves room for what you don’t.”</blockquote><p>Before you recommend: name the decision, denominator, uncertainty, trade-off and accountable human.</p></aside>
       </section>
@@ -164,7 +168,7 @@ function CaseCard({ item, index, onOpen }: { item: CaseStudy; index: number; onO
   return <article className={`caseCard ${item.color}`}>
     <div className="cardTop"><span>{String(index + 1).padStart(2,'0')}</span><div><em className={`eraBadge ${getEra(item).toLowerCase()}`}>{getEra(item) === 'Trending' ? '2024–26' : getEra(item)}</em><span>{item.week}</span></div></div>
     <div className="cardVisual"><CaseVisual item={item} type={index % 5} compact /></div>
-    <p className="cardTopic">{item.topic}</p><h3>{item.title}</h3><p className="cardSetting">{item.setting}</p>
+    <p className="cardTopic">{getCaseKind(item)} · {item.topic}</p><h3>{item.title}</h3><p className="cardSetting">{item.setting}</p>
     <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
     <button onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button>
   </article>;
@@ -179,32 +183,72 @@ function Visual({ type }: { type: number }) {
 }
 
 function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, [onClose]);
+
   return <div className="drawerBackdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <article className={`caseDrawer ${item.color}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-      <button className="drawerClose" onClick={onClose} aria-label="Close case">×</button>
-      <p className="caseKicker">{getEra(item).toUpperCase()} · {item.week} · {item.topic}</p><h2 id="drawer-title">{item.title}</h2><p className="drawerSetting">{item.setting}</p>
+    <article ref={dialogRef} className={`caseDrawer ${item.color}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <button ref={closeRef} className="drawerClose" onClick={onClose} aria-label="Close case">×</button>
+      <p className="caseKicker">{getCaseKind(item).toUpperCase()} · {getEra(item).toUpperCase()} · {item.week} · {item.topic}</p><h2 id="drawer-title">{item.title}</h2><p className="drawerSetting">{item.setting}</p>
       {(diagramAssets[item.id] || recreatedIds.has(item.id)) && <EvidenceFigure item={item} />}
       {item.keyNumbers && <div className="keyNumbers">{item.keyNumbers.map((number) => <div key={`${number.value}-${number.label}`}><strong>{number.value}</strong><span>{number.label}</span></div>)}</div>}
       <div className="drawerSections">
         {item.context && <section><span>CASE CONTEXT</span><p>{item.context}</p></section>}
-        <section><span>WHAT THE EVIDENCE SHOWS</span><p>{item.evidence ?? item.takeaway}</p></section>
+        <section className="evidenceStatus"><span>EVIDENCE STATUS</span><p>{getEvidenceStatus(item)}</p></section>
+        <section><span>{item.evidence ? 'WHAT THE EVIDENCE SHOWS' : 'TEACHING CLAIM'}</span><p>{item.evidence ?? item.takeaway}</p></section>
         {item.evidence && <section className="lesson"><span>WHY IT BELONGS IN THIS COURSE</span><p>{item.takeaway}</p></section>}
         <section><span>THE ANALYTICAL TRAP</span><p>{item.trap}</p></section>
         {item.decision && <section><span>THE DECISION STAKE</span><p>{item.decision}</p></section>}
-        <section className="question"><span>YOUR TURN</span><h3>{item.question}</h3><details><summary>Reveal a defensible answer</summary><p>{item.answer}</p></details></section>
+        <section className="question"><span>YOUR TURN</span><h3>{item.question}</h3><details><summary>Reveal one defensible response</summary><p>{item.answer}</p></details></section>
       </div>
-      <a className="sourceLink" href={item.sourceUrl} target={item.sourceUrl.startsWith('#') ? undefined : '_blank'} rel="noreferrer">Source / further reading: {item.source} <span>↗</span></a>
+      <a className="sourceLink" href={item.sourceUrl} target={item.sourceUrl.startsWith('#') ? undefined : '_blank'} rel="noreferrer">{getCaseKind(item) === 'Worked scenario' ? 'Method / further reading' : 'Source / further reading'}: {item.source} <span>↗</span></a>
     </article>
   </div>;
 }
 
 function EvidenceFigure({ item }: { item: CaseStudy }) {
   const original = diagramAssets[item.id];
+  const dataFaithful = dataFaithfulIds.has(item.id);
   return <figure className="evidenceFigure">
     <div className="evidenceCanvas"><CaseVisual item={item} type={visualIndex(item.id)} /></div>
     <figcaption>
-      <span>{original ? 'ORIGINAL DIAGRAM' : 'DATA-FAITHFUL RECREATION'}</span>
-      {original ? <a href={original.creditUrl} target="_blank" rel="noreferrer">{original.credit} · {original.license} ↗</a> : <a href={item.sourceUrl} target="_blank" rel="noreferrer">Recreated for legibility from the cited case source ↗</a>}
+      <span>{original ? 'ORIGINAL SOURCE IMAGE' : dataFaithful ? 'DATA-FAITHFUL RECREATION' : 'SOURCE-BASED SCHEMATIC'}</span>
+      {original ? <a href={original.creditUrl} target="_blank" rel="noreferrer">{original.credit} · {original.license} ↗</a> : <a href={item.sourceUrl} target="_blank" rel="noreferrer">{dataFaithful ? 'Recreated from values in the cited source' : 'Teaching schematic derived from the cited source'} ↗</a>}
+      {item.id === 'challenger' && <small>Source record shown; the prompt asks learners to design the missing temperature-by-damage decision plot.</small>}
     </figcaption>
   </figure>;
 }
@@ -218,9 +262,9 @@ function CaseVisual({ item, type, compact = false }: { item: CaseStudy; type: nu
 
 function RecreatedDiagram({ id, compact }: { id: string; compact: boolean }) {
   if (id === 'anscombe') return <AnscombeDiagram compact={compact} />;
-  if (id === 'berkeley') return <div className="reDiagram berkeleyDiagram"><span>AGGREGATE</span><div><i style={{width:'44%'}} /> <b>Men 44%</b></div><div><i style={{width:'35%'}} /> <b>Women 35%</b></div><strong>Group by department → relationship changes</strong><em>Recreated</em></div>;
-  if (id === 'digest') return <div className="reDiagram digestDiagram"><span>1936 POLL</span><div><i style={{height:'57%'}}><b>Landon</b></i><i style={{height:'43%'}}><b>Roosevelt</b></i></div><strong>2.4m replies ≠ representative sample</strong><em>Recreated</em></div>;
-  if (id === 'google-flu') return <div className="reDiagram fluDiagram"><span>2012–13 PEAK</span><div className="fluGrid"><i className="actual" /><i className="estimate" /></div><p><b>CDC baseline</b><b>GFT estimate ≈ 2×</b></p><em>Recreated</em></div>;
+  if (id === 'berkeley') return <div className="reDiagram berkeleyDiagram"><span>AGGREGATE → DEPARTMENT VIEW</span><div className="aggregateBars"><p><i style={{width:'44%'}} /><b>Men 44%</b></p><p><i style={{width:'35%'}} /><b>Women 35%</b></p></div><div className="departmentRates">{[['A','62','82'],['B','63','68'],['C','37','34'],['D','33','35'],['E','28','24'],['F','6','7']].map(([dept,men,women]) => <p key={dept}><b>{dept}</b><span>M {men}%</span><span>W {women}%</span></p>)}</div><strong>Women’s rate is higher in 4 of 6 departments</strong><em>Exact rates</em></div>;
+  if (id === 'digest') return <div className="reDiagram digestDiagram"><span>1936: FORECAST VS RESULT</span><div className="pollRows"><p><b>DIGEST</b><i style={{width:'57%'}}>L 57</i><i style={{width:'43%'}}>R 43</i></p><p><b>ACTUAL*</b><i style={{width:'38%'}}>L 38</i><i style={{width:'62%'}}>R 62</i></p></div><strong>*Two-party vote, rounded · 2.4m replies still failed</strong><em>Recreated</em></div>;
+  if (id === 'google-flu') return <div className="reDiagram fluDiagram"><span>US FLU ACTIVITY · 2012–13 PEAK</span><div className="fluGrid"><b className="yLabel">RELATIVE ACTIVITY ↑</b><i className="actual" /><i className="estimate" /><b className="xLabel">TIME →</b></div><p><b>CDC baseline</b><b>GFT estimate ≈ 2×</b></p><em>Recreated</em></div>;
   if (id === 'netflix-art') return <div className="reDiagram netflixDiagram"><span>SAME TITLE · DIFFERENT ART</span><div><i>A</i><i>B</i><i>C</i></div><strong>Randomise member → measure downstream</strong><em>Concept recreation</em></div>;
   if (id === 'axis') return <div className="reDiagram axisDiagram"><span>TRUST SCORE</span><div><i style={{height:'74%'}}>81</i><i style={{height:'43%'}}>78</i></div><strong>Axis begins at 77</strong><em>Recreated</em></div>;
   if (id === 'funnel') return <div className="reDiagram funnelDiagram"><span>CAMPAIGN FUNNEL</span><i>12,400 visits</i><i>3,170 carts</i><i>294 sales</i><strong>Clicks rose · sales fell</strong><em>Recreated</em></div>;
@@ -252,6 +296,20 @@ function getEra(item: CaseStudy): Exclude<EraFilter, 'All eras'> {
   if (classicIds.has(item.id)) return 'Classic';
   if (trendingIds.has(item.id)) return 'Trending';
   return 'Evergreen';
+}
+
+function getCaseKind(item: CaseStudy) {
+  if (workedScenarioIds.has(item.id)) return 'Worked scenario';
+  if (dataIllustrationIds.has(item.id)) return 'Data-backed illustration';
+  return 'Documented case';
+}
+
+function getEvidenceStatus(item: CaseStudy) {
+  const kind = getCaseKind(item);
+  if (kind === 'Worked scenario') return 'Illustrative teaching scenario. Treat its figures and decisions as pedagogical unless the card explicitly identifies an observed source value.';
+  if (kind === 'Data-backed illustration') return 'The linked dataset supports the setting. Reproduce the relevant slice before making a numerical or causal claim.';
+  if (item.evidence) return 'Documented case with a case-specific source. The record supports the evidence statement; the takeaway remains an analytical interpretation.';
+  return 'Documented case with a linked source. The statement below is the course’s teaching interpretation, not a direct quotation or causal finding.';
 }
 
 function visualIndex(id: string) {

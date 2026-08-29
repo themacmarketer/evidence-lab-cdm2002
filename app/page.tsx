@@ -6,8 +6,13 @@ type CaseStudy = {
   id: string; topic: string; week: string; title: string; setting: string; takeaway: string;
   trap: string; question: string; answer: string; tags: string[]; source: string; sourceUrl: string; color: string;
   learningRole?: 'Foundational' | 'Transfer' | 'Current practice'; context?: string; evidence?: string; decision?: string;
+  sourceClass?: 'Institutional source' | 'Vendor source' | 'Independent source';
   keyNumbers?: { value: string; label: string }[];
 };
+
+type CaseNotes = { fact: string; inference: string; hypothesis: string };
+const emptyNotes: CaseNotes = { fact:'', inference:'', hypothesis:'' };
+const notesStorageKey = 'evidence-lab-case-notes-v1';
 
 const topics = ['All topics','Foundations','AI agents','Data preparation','Statistical interpretation','Web analytics','Visualisation','Data stories','Forecasting','Campaign decisions'];
 const learningRoles = ['All paths','Foundational','Transfer','Current practice'] as const;
@@ -21,7 +26,7 @@ const diagramAssets: Record<string, DiagramAsset> = {
   nightingale: { src:'/diagrams/nightingale-original.jpg', alt:'Florence Nightingale’s polar-area diagrams comparing causes of mortality in the British Army', credit:'Florence Nightingale · Wikimedia Commons', creditUrl:'https://commons.wikimedia.org/wiki/File:Nightingale-mortality.jpg', license:'Public domain' },
   challenger: { src:'/diagrams/challenger-original.jpg', alt:'Morton Thiokol history of O-ring damage in solid rocket motor field joints', credit:'Rogers Commission Report · NASA', creditUrl:'https://www.nasa.gov/history/rogersrep/v5p895.htm', license:'US government work' },
 };
-const recreatedIds = new Set(['anscombe','berkeley','digest','google-flu','netflix-art','axis','funnel','crowdstrike','ai-overviews','simplygo','mycity','zillow']);
+const recreatedIds = new Set(['anscombe','berkeley','digest','google-flu','netflix-art','axis','funnel','crowdstrike','ai-overviews','simplygo','mycity','zillow','ai-verify','genai-catalog']);
 const dataFaithfulIds = new Set(['anscombe','berkeley','digest','google-flu','mycity']);
 const workedScenarioIds = new Set(['agent-boundary','categories','abtest','funnel','attribution','axis','choropleth','museum','shock','benefits','campaign']);
 const dataIllustrationIds = new Set(['commute','rainfall']);
@@ -36,6 +41,8 @@ const cases: CaseStudy[] = [
   { id:'zillow', topic:'Forecasting', week:'W12', learningRole:'Transfer', title:'A forecast became inventory—and balance-sheet risk', setting:'Zillow Offers wind-down · 2021', context:'Zillow bought homes directly, making future price forecasts operational: errors determined purchase prices, renovation plans, inventory and capital exposure.', evidence:'Zillow said the unpredictability of home-price forecasting exceeded what it anticipated and that scaling would create excessive earnings and balance-sheet volatility.', takeaway:'Forecast error changes meaning when a prediction triggers an irreversible, capital-intensive action.', trap:'Reporting average model accuracy while ignoring tail errors, correlated market shifts and exposure at scale.', decision:'Tie model evaluation to the cost distribution of being wrong, capacity constraints and an explicit stop rule.', question:'Why can a reasonably accurate model still make a bad business?', answer:'Because asymmetric errors, correlated shocks and scale can turn a minority of misses into inventory and cash-flow losses larger than the gains.', keyNumbers:[{value:'1,200 bps',label:'unit-economics swing cited'},{value:'2021',label:'operations wound down'},{value:'scale',label:'amplified exposure'}], tags:['forecast risk','operations','model limits'], source:'Zillow · Q3 2021 shareholder letter', sourceUrl:'https://s24.q4cdn.com/723050407/files/doc_financials/2021/q3/Zillow-Group-Q3%2721-Shareholder-Letter.pdf', color:'blue' },
   { id:'crowdstrike', topic:'Data preparation', week:'W03', learningRole:'Current practice', title:'One content update, a global workflow failure', setting:'CrowdStrike Windows outage · July 2024', context:'CrowdStrike distributed a Rapid Response Content configuration update to Windows hosts. A mismatch and validation failure triggered system crashes across dependent organisations.', evidence:'The company’s root-cause analysis described the update path and subsequent changes including staged deployment, additional validation and third-party review.', takeaway:'A transformation pipeline needs release validation, canaries, observability and rollback—not confidence in past success.', trap:'Calling this merely a coding bug. The teaching value is the socio-technical pipeline: tests, rollout scope, monitoring and recovery all shaped impact.', decision:'Choose what must be validated before release, which cohort receives the change first and what signal automatically halts propagation.', question:'What is the analytics analogue of a canary release?', answer:'Apply a cleaning rule or agent workflow to a small, representative subset; reconcile rows, totals and outputs before scaling it to the full dataset.', keyNumbers:[{value:'04:09 UTC',label:'update published'},{value:'2024',label:'global incident'},{value:'staged',label:'safer rollout principle'}], tags:['validation','rollout','blast radius'], source:'CrowdStrike · Root Cause Analysis', sourceUrl:'https://www.crowdstrike.com/wp-content/uploads/2024/08/Channel-File-291-Incident-Root-Cause-Analysis-08.06.2024.pdf', color:'coral' },
   { id:'ai-overviews', topic:'AI agents', week:'W02', learningRole:'Current practice', title:'When the source was satire, but the answer sounded certain', setting:'Google AI Overviews rollout · May 2024', context:'AI-generated summaries were rolled out broadly in US Search. Users surfaced odd or inaccurate answers, while fabricated screenshots complicated diagnosis.', evidence:'Google said some results misinterpreted queries or web language, then added more than a dozen technical improvements including restrictions on satire, user-generated content and nonsensical queries.', takeaway:'Grounding is not enough if source quality, context and abstention are weak.', trap:'Fixing viral examples one by one rather than identifying failure classes and measuring them systematically.', decision:'Define when the system should answer, cite, defer to conventional search or refuse—especially for health and safety topics.', question:'What should a launch dashboard separate?', answer:'Confirmed model failures, source-quality failures, unsafe-query failures and fake reports. Each needs a different denominator and remedy.', keyNumbers:[{value:'12+',label:'technical improvements'},{value:'May 2024',label:'broad US rollout'},{value:'abstain',label:'valid system action'}], tags:['grounding','source quality','abstention'], source:'Google · AI Overviews: what happened', sourceUrl:'https://blog.google/products-and-platforms/products/search/ai-overviews-update-may-2024/', color:'lime' },
+  { id:'ai-verify', topic:'AI agents', week:'W11', learningRole:'Current practice', sourceClass:'Institutional source', title:'When responsible AI became a test plan', setting:'Singapore AI Verify and Project Moonshot · 2022–2026', context:'Singapore’s AI Verify work translated governance principles into process checks and technical tests. Project Moonshot extended the testing conversation to generative-AI applications and model-safety evaluations.', evidence:'IMDA describes testing resources that cover robustness, factuality, propensity to bias, toxicity generation and data governance, while stressing an iterative approach to risks in model development and use.', takeaway:'Assurance begins when principles become test cases, thresholds, logs, ownership and escalation—not when a demo looks convincing.', trap:'Treating a framework, toolkit or passed test as certification that a particular deployment is safe, effective or appropriate in every context.', decision:'Before deployment, define the use case, credible harms, evaluation set, acceptance threshold, human owner, escalation route and disclosure requirement.', question:'What must be visible before an instructor calls an AI-assisted workflow responsible?', answer:'The intended use, test set, thresholds, failure record, unresolved risks, accountable owner, human escalation and limits of what the evaluations establish.', keyNumbers:[{value:'2022',label:'AI Verify MVP introduced'},{value:'5',label:'evaluation areas named'},{value:'1',label:'accountable owner required'}], tags:['Singapore','assurance','evaluation'], source:'IMDA · Project Moonshot, powered by AI Verify', sourceUrl:'https://www.imda.gov.sg/resources/press-releases-factsheets-and-speeches/factsheets/2024/project-moonshot', color:'orange' },
+  { id:'genai-catalog', topic:'AI agents', week:'W11', learningRole:'Current practice', sourceClass:'Vendor source', title:'1,302 use cases—and one missing denominator', setting:'Google Cloud customer catalogue · updated April 2026', context:'Google Cloud’s growing catalogue assembles customer and partner descriptions of generative-AI deployments and frames their expansion as evidence of an “agentic enterprise” era.', evidence:'The first-party catalogue’s April 2026 headline reports 1,302 real-world use cases. It is a broad collection of selected examples, not a representative sample with a denominator or common independent outcome measure.', takeaway:'A large catalogue can establish breadth of reported activity without establishing an adoption rate, average return, causal impact or probability of success.', trap:'Counting selected vendor stories as independent success evidence—or treating the number of examples as the percentage of organisations achieving value.', decision:'Before citing the catalogue, classify each claim, locate its denominator, identify who measured the outcome and state what cannot be inferred.', question:'What is the strongest defensible statement supported by “1,302 use cases”?', answer:'Google Cloud published 1,302 selected customer and partner examples. The catalogue alone cannot tell us how representative they are, how many attempts failed or what average causal impact the deployments produced.', keyNumbers:[{value:'1,302',label:'reported examples'},{value:'0',label:'population denominator'},{value:'1st-party',label:'source relationship'}], tags:['source critique','selection bias','vendor claims'], source:'Google Cloud · Real-world gen-AI use cases', sourceUrl:'https://cloud.google.com/transform/101-real-world-generative-ai-use-cases-from-industry-leaders', color:'lime' },
   { id:'simplygo', topic:'Campaign decisions', week:'W13', learningRole:'Current practice', title:'When adoption data missed a commuter need', setting:'Singapore SimplyGo reversal · January 2024', context:'The planned retirement of legacy adult fare cards met strong public concern, including the loss of instant fare and balance displays at station gates.', evidence:'The Ministry of Transport said it had underestimated how strongly some commuters preferred seeing fares and balances immediately, then reversed the mandatory transition and retained the legacy system.', takeaway:'Usage data cannot substitute for understanding which moments make a service feel trustworthy.', trap:'Interpreting adoption counts as acceptance while missing a small, repeated interaction that anchors user confidence.', decision:'Combine operational costs and migration progress with observation, complaints, accessibility needs and qualitative research before mandating change.', question:'Which measure would have tested the decision more directly?', answer:'A direct measure of the need to verify fares and balances at the gate, segmented by commuter group—not adoption alone.', keyNumbers:[{value:'64%',label:'adult commuters on ABT in Dec 2023'},{value:'1 glance',label:'critical user moment'},{value:'2030',label:'legacy support horizon stated'}], tags:['Singapore','service design','qualitative data'], source:'Singapore MOT · Parliamentary reply on SimplyGo', sourceUrl:'https://www.mot.gov.sg/news-resources/newsroom/oral-reply-by-minister-for-transport-chee-hong-tat-to-parliamentary-questions-on-simplygo/', color:'blue' },
   { id:'mycity', topic:'AI agents', week:'W02', learningRole:'Current practice', title:'The civic chatbot that needed an audit, not a disclaimer', setting:'New York City MyCity audit · 2026', context:'MyCity was built to help residents and businesses navigate services. Its chatbot operated in a domain where incorrect guidance could affect legal or financial decisions.', evidence:'A 2026 city comptroller audit reported hallucination concerns, response-time problems and wider questions about technical, economic, legal and operational feasibility.', takeaway:'Public-sector agents need measurable accuracy, latency, escalation and accountability targets before scale.', trap:'Treating a disclaimer as a control. Warning users that a system may be wrong does not make high-stakes misinformation safe.', decision:'Set test suites from real user tasks, publish thresholds, log sources, create human escalation and define a shutdown condition.', question:'Which two metrics belong together?', answer:'Answer correctness and task latency. A correct answer that arrives too slowly—or a fast answer that is wrong—both fail the service.', keyNumbers:[{value:'12.4–16.2s',label:'reported P90 responses'},{value:'2026',label:'audit published'},{value:'human',label:'required escalation path'}], tags:['public service','audit','latency'], source:'NYC Comptroller · MyCity audit', sourceUrl:'https://comptroller.nyc.gov/reports/audit-report-on-the-new-york-city-office-of-technology-and-innovations-mycity-system/', color:'orange' },
   { id:'netflix-llm-art', topic:'Web analytics', week:'W05–06', learningRole:'Current practice', title:'Can an LLM predict which artwork you will choose?', setting:'Netflix artwork research · 2026', context:'Netflix researchers tested post-trained language models on structured descriptions of members, titles and candidate artwork to improve personalised artwork selection.', evidence:'The published study reports training on 110,000 data points, evaluation on 5,000 held-out examples and 3–5% improvements over a production model in the reported experiments.', takeaway:'Offline model gains are evidence for a candidate—not proof of better member outcomes.', trap:'Confusing held-out predictive performance with causal lift, or optimising clicks without fairness and satisfaction guardrails.', decision:'Use offline evaluation to screen candidates, then pre-register an online experiment with member-level outcomes and long-term guardrails.', question:'What must happen before “3–5% better” becomes a product claim?', answer:'Clarify the metric and baseline, reproduce the holdout result, then run an online randomised test measuring actual member behaviour and downstream quality.', keyNumbers:[{value:'110k',label:'training examples'},{value:'5k',label:'held-out examples'},{value:'3–5%',label:'reported improvement'}], tags:['LLM','offline vs online','personalisation'], source:'Netflix Research · Artwork Personalization via LLM Post-training', sourceUrl:'https://arxiv.org/abs/2601.02764', color:'coral' },
@@ -71,6 +78,8 @@ export default function Home() {
   const [learningRole, setLearningRole] = useState<LearningRoleFilter>('All paths');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<CaseStudy | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
 
   const filtered = useMemo(() => cases.filter((item) => {
@@ -79,6 +88,9 @@ export default function Home() {
     const searchMatch = `${item.title} ${item.setting} ${item.context ?? ''} ${item.evidence ?? ''} ${item.tags.join(' ')}`.toLowerCase().includes(search.toLowerCase());
     return topicMatch && roleMatch && searchMatch;
   }), [topic, learningRole, search]);
+
+  const comparisonCases = compareIds.map((id) => cases.find((item) => item.id === id)).filter((item): item is CaseStudy => Boolean(item));
+  const toggleCompare = (id: string) => setCompareIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 2 ? [...current, id] : current);
 
   return (
     <main id="top">
@@ -122,8 +134,12 @@ export default function Home() {
         </div>
         <div className="topicChips" aria-label="Filter by topic">{topics.map((item) => <button key={item} className={topic === item ? 'active' : ''} onClick={() => setTopic(item)} aria-pressed={topic === item}>{item}</button>)}</div>
         <p className="resultCount">Showing {filtered.length} of {cases.length} cases · {learningRole === 'All paths' ? 'all learning paths' : learningRole}</p>
+        {comparisonCases.length > 0 && <aside className="compareTray" aria-label="Cases selected for comparison">
+          <div><span>CONTRASTING CASES · {comparisonCases.length}/2</span>{comparisonCases.map((item) => <button key={item.id} onClick={() => toggleCompare(item.id)} aria-label={`Remove ${item.title} from comparison`}>{item.title} ×</button>)}</div>
+          <div><button className="clearCompare" onClick={() => setCompareIds([])}>Clear</button><button className="openCompare" disabled={comparisonCases.length !== 2} onClick={() => setComparisonOpen(true)}>Compare the evidence ↗</button></div>
+        </aside>}
         <div className="caseGrid">
-          {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.indexOf(item)} onOpen={() => setSelected(item)} />)}
+          {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.indexOf(item)} onOpen={() => setSelected(item)} compareSelected={compareIds.includes(item.id)} compareDisabled={compareIds.length === 2 && !compareIds.includes(item.id)} onCompare={() => toggleCompare(item.id)} />)}
         </div>
         {filtered.length === 0 && <div className="emptyState"><strong>No evidence found.</strong><p>Try another keyword or reset the filters.</p><button onClick={() => { setTopic('All topics'); setLearningRole('All paths'); setSearch(''); }}>Reset the lab</button></div>}
       </section>
@@ -160,17 +176,18 @@ export default function Home() {
       <footer><div className="brand"><span className="brandMark">E/L</span><span>Evidence Lab</span></div><p>CDM2002 · Data Analytics and Visualisation<br />Trimester 1, AY 2026/27</p><a href="#top">Back to top ↑</a></footer>
 
       {selected && <CaseDrawer item={selected} onClose={() => setSelected(null)} />}
+      {comparisonOpen && comparisonCases.length === 2 && <CompareDrawer items={[comparisonCases[0], comparisonCases[1]]} onClose={() => setComparisonOpen(false)} />}
     </main>
   );
 }
 
-function CaseCard({ item, index, onOpen }: { item: CaseStudy; index: number; onOpen: () => void }) {
+function CaseCard({ item, index, onOpen, compareSelected, compareDisabled, onCompare }: { item: CaseStudy; index: number; onOpen: () => void; compareSelected: boolean; compareDisabled: boolean; onCompare: () => void }) {
   return <article className={`caseCard ${item.color}`}>
     <div className="cardTop"><span>{String(index + 1).padStart(2,'0')}</span><div><em className={`roleBadge ${getLearningRole(item).toLowerCase().replace(' ','-')}`}>{getLearningRole(item) === 'Current practice' ? 'Current · 2024–26' : getLearningRole(item)}</em><span>{item.week}</span></div></div>
     <div className="cardVisual"><CaseVisual item={item} type={index % 5} compact /></div>
     <p className="cardTopic">{getCaseKind(item)} · {item.topic}</p><h3>{item.title}</h3><p className="cardSetting">{item.setting}</p>
     <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-    <button onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button>
+    <div className="cardActions"><button className="compareToggle" onClick={onCompare} disabled={compareDisabled} aria-pressed={compareSelected} aria-label={`${compareSelected ? 'Remove' : 'Add'} ${item.title} ${compareSelected ? 'from' : 'to'} comparison`}>{compareSelected ? 'Selected ✓' : 'Compare'}</button><button className="inspectButton" onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button></div>
   </article>;
 }
 
@@ -199,7 +216,7 @@ function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void })
         return;
       }
       if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'));
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, textarea, summary, [tabindex]:not([tabindex="-1"])'));
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -228,7 +245,7 @@ function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void })
       {item.keyNumbers && <div className="keyNumbers">{item.keyNumbers.map((number) => <div key={`${number.value}-${number.label}`}><strong>{number.value}</strong><span>{number.label}</span></div>)}</div>}
       <div className="drawerSections">
         {item.context && <section><span>CASE CONTEXT</span><p>{item.context}</p></section>}
-        <section className="evidenceStatus"><span>EVIDENCE STATUS</span><p>{getEvidenceStatus(item)}</p></section>
+        <section className="evidenceStatus"><span>EVIDENCE STATUS{item.sourceClass ? ` · ${item.sourceClass.toUpperCase()}` : ''}</span><p>{getEvidenceStatus(item)}</p></section>
         <section><span>{item.evidence ? 'WHAT THE EVIDENCE SHOWS' : 'TEACHING CLAIM'}</span><p>{item.evidence ?? item.takeaway}</p></section>
         {item.evidence && <section className="lesson"><span>WHY IT BELONGS IN THIS COURSE</span><p>{item.takeaway}</p></section>}
         <section><span>THE ANALYTICAL TRAP</span><p>{item.trap}</p></section>
@@ -236,6 +253,93 @@ function CaseDrawer({ item, onClose }: { item: CaseStudy; onClose: () => void })
         <section className="question"><span>YOUR TURN</span><h3>{item.question}</h3><details><summary>Reveal one defensible response</summary><p>{item.answer}</p></details></section>
       </div>
       <a className="sourceLink" href={item.sourceUrl} target={item.sourceUrl.startsWith('#') ? undefined : '_blank'} rel="noreferrer">{getCaseKind(item) === 'Worked scenario' ? 'Method / further reading' : 'Source / further reading'}: {item.source} <span>↗</span></a>
+      <CaseNotebook caseId={item.id} title={item.title} />
+    </article>
+  </div>;
+}
+
+function CaseNotebook({ caseId, title }: { caseId: string; title: string }) {
+  const [notes, setNotes] = useState<CaseNotes>(emptyNotes);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadNotes = window.setTimeout(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(notesStorageKey) ?? '{}') as Record<string, Partial<CaseNotes>>;
+        setNotes({ ...emptyNotes, ...saved[caseId] });
+      } catch {
+        setNotes(emptyNotes);
+      } finally {
+        setLoaded(true);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(loadNotes);
+  }, [caseId]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(notesStorageKey) ?? '{}') as Record<string, CaseNotes>;
+      localStorage.setItem(notesStorageKey, JSON.stringify({ ...saved, [caseId]: notes }));
+    } catch {
+      // Notes remain available in the current drawer if browser storage is unavailable.
+    }
+  }, [caseId, loaded, notes]);
+
+  const fields: { key: keyof CaseNotes; label: string; prompt: string }[] = [
+    { key:'fact', label:'Fact', prompt:'What is directly supported by the source?' },
+    { key:'inference', label:'Inference', prompt:'What does the evidence reasonably suggest?' },
+    { key:'hypothesis', label:'Hypothesis', prompt:'What would you test or verify next?' },
+  ];
+
+  return <section className="caseNotebook" aria-labelledby={`notebook-${caseId}`}>
+    <div className="notebookHeading"><div><span>CASE NOTEBOOK</span><h3 id={`notebook-${caseId}`}>Separate the claim.</h3></div><em aria-live="polite">{loaded ? 'Saved on this device' : 'Loading notes…'}</em></div>
+    <p>Write one statement in each box for “{title}”. Facts are source-supported; inferences interpret; hypotheses propose the next test.</p>
+    <div className="notebookGrid">{fields.map((field) => <label key={field.key}><strong>{field.label}</strong><span>{field.prompt}</span><textarea value={notes[field.key]} onChange={(event) => setNotes((current) => ({ ...current, [field.key]: event.target.value }))} rows={5} placeholder="Write a concise statement…" /></label>)}</div>
+  </section>;
+}
+
+function CompareDrawer({ items, onClose }: { items: [CaseStudy, CaseStudy]; onClose: () => void }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const [left, right] = items;
+  const rows = [
+    ['Learning purpose', getLearningRole(left), getLearningRole(right)],
+    ['Evidence claim', left.evidence ?? left.takeaway, right.evidence ?? right.takeaway],
+    ['Analytical trap', left.trap, right.trap],
+    ['Decision stake', left.decision ?? 'Use the teaching prompt to define the decision before acting.', right.decision ?? 'Use the teaching prompt to define the decision before acting.'],
+    ['Transferable lesson', left.takeaway, right.takeaway],
+    ['Evidence boundary', getEvidenceStatus(left), getEvidenceStatus(right)],
+  ];
+
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = previousOverflow; previousFocus?.focus(); };
+  }, [onClose]);
+
+  return <div className="drawerBackdrop compareBackdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <article ref={dialogRef} className="compareDrawer" role="dialog" aria-modal="true" aria-labelledby="compare-title">
+      <button ref={closeRef} className="drawerClose" onClick={onClose} aria-label="Close comparison">×</button>
+      <p className="caseKicker">CONTRASTING CASES · FIND THE SHARED STRUCTURE</p><h2 id="compare-title">Compare the evidence,<br />not the headlines.</h2>
+      <div className="compareHeaders"><div><span>CASE A · {left.week}</span><h3>{left.title}</h3><p>{left.setting}</p></div><div><span>CASE B · {right.week}</span><h3>{right.title}</h3><p>{right.setting}</p></div></div>
+      <div className="compareMatrix">{rows.map(([label, leftValue, rightValue]) => <section key={label}><h4>{label}</h4><p>{leftValue}</p><p>{rightValue}</p></section>)}</div>
+      <div className="compareSources"><a href={left.sourceUrl} target="_blank" rel="noreferrer">A source: {left.source} ↗</a><a href={right.sourceUrl} target="_blank" rel="noreferrer">B source: {right.source} ↗</a></div>
+      <aside className="comparePrompt"><span>TRANSFER PROMPT</span><strong>What principle survives when the organisation, technology and stakes change?</strong></aside>
     </article>
   </div>;
 }
@@ -273,6 +377,8 @@ function RecreatedDiagram({ id, compact }: { id: string; compact: boolean }) {
   if (id === 'simplygo') return <div className="reDiagram simplygoDiagram"><span>FARE-GATE MOMENT</span><div><b>$?.??</b><i>BALANCE NOT SHOWN</i></div><strong>One missing glance changed trust</strong><em>Recreated</em></div>;
   if (id === 'mycity') return <div className="reDiagram latencyDiagram"><span>P90 RESPONSE TIME</span><div><i style={{width:'78%'}}>12.4s</i><i style={{width:'100%'}}>16.2s</i></div><strong>Correctness × latency × recourse</strong><em>Recreated</em></div>;
   if (id === 'zillow') return <div className="reDiagram zillowDiagram"><span>UNIT ECONOMICS</span><div><i>Q2</i><b>1,200 bps swing</b><i>Q4</i></div><strong>Forecast error became inventory risk</strong><em>Recreated</em></div>;
+  if (id === 'ai-verify') return <div className="reDiagram assuranceDiagram"><span>ASSURANCE WORKFLOW</span><div><i>Use</i><b>→</b><i>Risk</i><b>→</b><i>Test</i><b>→</b><i>Log</i><b>→</b><i className="owner">Owner</i></div><strong>A passed test is evidence—not blanket certification</strong><em>Teaching schematic</em></div>;
+  if (id === 'genai-catalog') return <div className="reDiagram catalogDiagram"><span>VENDOR EVIDENCE AUDIT</span><div><b>1,302</b><i>selected examples</i><strong>÷ ?</strong><i>population denominator</i></div><strong>Many stories ≠ a representative success rate</strong><em>Source critique</em></div>;
   return null;
 }
 

@@ -96,3 +96,4 @@ footer { padding:40px 5vw; display:grid; grid-template-columns:1fr 1fr 1fr; alig
 .editorSave { padding:12px 22px; border:1.5px solid var(--ink); background:var(--ink); color:var(--paper); font:700 12px monospace; cursor:pointer; }
 .editorSave:hover { opacity:.85; }
 @media (max-width: 640px) { .editorResourceRow { grid-template-columns:1fr; } }
+.resourceChip.dataset span { border-radius:4px; font-size:9px; letter-spacing:.05em; }

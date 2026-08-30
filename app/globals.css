@@ -61,3 +61,6 @@ footer { padding:40px 5vw; display:grid; grid-template-columns:1fr 1fr 1fr; alig
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.ticker div{animation:none}.drawerBackdrop,.caseDrawer,.compareDrawer{animation:none}}
 @media(max-width:1000px){.learningGuide{grid-template-columns:1fr}.learningGuide button{min-height:190px}}
 @media(max-width:800px){.learningGuide{margin-top:45px}.learningFilters>span{width:100%;margin-bottom:3px}.keyNumbers{grid-template-columns:1fr}.keyNumbers>div{min-height:82px}}
+.copyCaseLink { display:block; width:100%; margin-top:14px; padding:12px 14px; border:1.5px dashed var(--ink); background:transparent; color:inherit; font:700 11px/1.4 monospace; letter-spacing:.04em; text-align:left; cursor:pointer; }
+.copyCaseLink:hover { background:rgba(20,19,17,.08); }
+.copyCaseLink:focus-visible { outline:4px solid var(--ink); outline-offset:3px; }

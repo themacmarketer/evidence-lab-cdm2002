@@ -64,3 +64,35 @@ footer { padding:40px 5vw; display:grid; grid-template-columns:1fr 1fr 1fr; alig
 .copyCaseLink { display:block; width:100%; margin-top:14px; padding:12px 14px; border:1.5px dashed var(--ink); background:transparent; color:inherit; font:700 11px/1.4 monospace; letter-spacing:.04em; text-align:left; cursor:pointer; }
 .copyCaseLink:hover { background:rgba(20,19,17,.08); }
 .copyCaseLink:focus-visible { outline:4px solid var(--ink); outline-offset:3px; }
+.adminBar { display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:12px clamp(20px,4vw,48px); background:var(--ink); color:var(--paper); font:700 11px/1.5 monospace; letter-spacing:.04em; }
+.adminBar strong { padding:4px 10px; border:1.5px solid var(--paper); }
+.adminBar span { flex:1 1 320px; font-weight:400; }
+.adminBar code { border:1px solid; padding:0 4px; }
+.adminBar button, .adminBar .adminImport { padding:8px 12px; border:1.5px solid var(--paper); background:transparent; color:var(--paper); font:700 11px monospace; cursor:pointer; }
+.adminBar button:hover, .adminBar .adminImport:hover { background:var(--paper); color:var(--ink); }
+.adminBar .adminImport input { display:none; }
+.resourceRow { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+.resourceChip { display:inline-flex; align-items:center; gap:10px; padding:10px 16px 10px 10px; border:1.5px solid var(--ink); font:700 12px monospace; letter-spacing:.04em; }
+.resourceChip:hover { background:rgba(20,19,17,.08); }
+.resourceChip span { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; padding:0 5px; font-size:11px; border:1.5px solid var(--ink); border-radius:50%; }
+.resourceChip.video span { background:#e5231b; border-color:#e5231b; color:#fff; padding-left:7px; }
+.resourceChip.pdf span { border-radius:4px; }
+.adminDrawerTools { display:flex; gap:10px; margin-top:18px; }
+.adminDrawerTools button { padding:9px 14px; border:1.5px solid var(--ink); background:var(--paper); font:700 11px monospace; cursor:pointer; }
+.adminDrawerTools button:hover { background:var(--ink); color:var(--paper); }
+.caseEditor { margin-top:24px; padding:20px; border:1.5px dashed var(--ink); background:rgba(245,240,231,.55); }
+.caseEditor .editorNote { font:12px/1.5 monospace; margin-bottom:16px; }
+.caseEditor .editorNote code { border:1px solid; padding:0 4px; }
+.editorField { display:block; margin-bottom:14px; }
+.editorField span { display:block; font:700 10px monospace; letter-spacing:.08em; margin-bottom:6px; text-transform:uppercase; }
+.editorField span em { font-style:normal; font-weight:400; text-transform:none; letter-spacing:0; }
+.editorField input, .editorField textarea, .editorResourceRow input, .editorResourceRow select { width:100%; padding:10px; border:1.5px solid var(--ink); background:var(--paper); font:14px/1.45 Georgia,serif; color:var(--ink); }
+.editorResources > span { display:block; font:700 10px monospace; letter-spacing:.08em; margin:18px 0 10px; }
+.editorResourceRow { display:grid; grid-template-columns:minmax(140px,2.4fr) minmax(110px,1fr) minmax(120px,1.4fr) 44px; gap:8px; margin-bottom:8px; }
+.editorResourceRow select, .editorResourceRow button { font:700 12px monospace; }
+.editorResourceRow button { border:1.5px solid var(--ink); background:var(--paper); cursor:pointer; font-size:18px; }
+.editorAddResource { padding:9px 14px; border:1.5px solid var(--ink); background:transparent; font:700 11px monospace; cursor:pointer; }
+.editorActions { margin-top:16px; }
+.editorSave { padding:12px 22px; border:1.5px solid var(--ink); background:var(--ink); color:var(--paper); font:700 12px monospace; cursor:pointer; }
+.editorSave:hover { opacity:.85; }
+@media (max-width: 640px) { .editorResourceRow { grid-template-columns:1fr; } }

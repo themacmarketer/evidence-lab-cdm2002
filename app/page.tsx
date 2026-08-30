@@ -2,17 +2,49 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+type CaseResource = { type: 'video' | 'pdf' | 'article'; url: string; label?: string };
+
 type CaseStudy = {
   id: string; topic: string; week: string; title: string; setting: string; takeaway: string;
   trap: string; question: string; answer: string; tags: string[]; source: string; sourceUrl: string; color: string;
   learningRole?: 'Foundational' | 'Transfer' | 'Current practice'; context?: string; evidence?: string; decision?: string;
   sourceClass?: 'Institutional source' | 'Vendor source' | 'Independent source';
   keyNumbers?: { value: string; label: string }[];
+  resources?: CaseResource[];
 };
 
 type CaseNotes = { fact: string; inference: string; hypothesis: string };
 const emptyNotes: CaseNotes = { fact:'', inference:'', hypothesis:'' };
 const notesStorageKey = 'evidence-lab-case-notes-v1';
+
+const editableFields = ['title','setting','context','evidence','takeaway','trap','decision','question','answer','source','sourceUrl'] as const;
+type EditableField = typeof editableFields[number];
+type CaseOverride = Partial<Record<EditableField, string>> & { resources?: CaseResource[] };
+const overridesStorageKey = 'evidence-lab-case-overrides-v1';
+const optionalFields = new Set<EditableField>(['context','evidence','decision']);
+
+function applyOverride(item: CaseStudy, override?: CaseOverride): CaseStudy {
+  if (!override) return item;
+  const next: CaseStudy = { ...item };
+  const target = next as unknown as Record<EditableField, string | undefined>;
+  for (const field of editableFields) {
+    const value = override[field];
+    if (value === undefined) continue;
+    if (value === '') { if (optionalFields.has(field)) target[field] = undefined; continue; }
+    target[field] = value;
+  }
+  if (override.resources) next.resources = override.resources;
+  return next;
+}
+
+const resourceFallbackLabels: Record<CaseResource['type'], string> = { video: 'Watch the video', pdf: 'Open the PDF', article: 'Read the article' };
+const resourceIcons: Record<CaseResource['type'], string> = { video: '▶', pdf: 'PDF', article: '↗' };
+
+function detectResourceType(url: string): CaseResource['type'] {
+  if (/\.pdf(\?|#|$)/i.test(url)) return 'pdf';
+  if (/(youtube\.com|youtu\.be|vimeo\.com|instagram\.com\/(p|reel|tv)\/|tiktok\.com|facebook\.com\/watch|\.mp4(\?|#|$))/i.test(url)) return 'video';
+  return 'article';
+}
 
 const topics = ['All topics','Foundations','AI agents','Data preparation','Statistical interpretation','Web analytics','Visualisation','Data stories','Forecasting','Campaign decisions'];
 const learningRoles = ['All paths','Foundational','Transfer','Current practice'] as const;
@@ -48,7 +80,7 @@ const cases: CaseStudy[] = [
   { id:'netflix-llm-art', topic:'Web analytics', week:'W05–06', learningRole:'Current practice', title:'Can an LLM predict which artwork you will choose?', setting:'Netflix artwork research · 2026', context:'Netflix researchers tested post-trained language models on structured descriptions of members, titles and candidate artwork to improve personalised artwork selection.', evidence:'The published study reports training on 110,000 data points, evaluation on 5,000 held-out examples and 3–5% improvements over a production model in the reported experiments.', takeaway:'Offline model gains are evidence for a candidate—not proof of better member outcomes.', trap:'Confusing held-out predictive performance with causal lift, or optimising clicks without fairness and satisfaction guardrails.', decision:'Use offline evaluation to screen candidates, then pre-register an online experiment with member-level outcomes and long-term guardrails.', question:'What must happen before “3–5% better” becomes a product claim?', answer:'Clarify the metric and baseline, reproduce the holdout result, then run an online randomised test measuring actual member behaviour and downstream quality.', keyNumbers:[{value:'110k',label:'training examples'},{value:'5k',label:'held-out examples'},{value:'3–5%',label:'reported improvement'}], tags:['LLM','offline vs online','personalisation'], source:'Netflix Research · Artwork Personalization via LLM Post-training', sourceUrl:'https://arxiv.org/abs/2601.02764', color:'coral' },
   { id:'mcdonalds-ai', topic:'AI agents', week:'W02', learningRole:'Current practice', title:'The drive-thru pilot that stopped before scale', setting:'McDonald’s and IBM voice ordering · 2021–2024', context:'McDonald’s tested automated order taking at more than 100 drive-thrus, a noisy real-world environment with accents, overlapping voices and highly variable orders.', evidence:'The company ended the specific IBM test in 2024 while saying voice ordering still had future potential. Public reports documented conspicuous order failures and customer complaints.', takeaway:'Ending a pilot can be good evidence practice when the current system is not ready for the operating environment.', trap:'Declaring AI a total failure—or a future certainty—without seeing the test criteria, error distribution and human fallback performance.', decision:'Segment errors by accent, noise, order complexity and harm; compare speed and accuracy with a human-assisted baseline before choosing to scale, redesign or stop.', question:'Which average could hide the real product risk?', answer:'Overall order accuracy. Rare but severe basket errors, systematic failures for speech groups and staff intervention time need separate measures.', keyNumbers:[{value:'100+',label:'restaurants in test'},{value:'2024',label:'test ended'},{value:'severity',label:'matters beyond mean error'}], tags:['pilot','speech AI','segmentation'], source:'Associated Press · McDonald’s ends AI drive-thru test', sourceUrl:'https://apnews.com/article/bebc898363f2d550e1a0cd3c682fa234', color:'lime' },
   { id:'snow', topic:'Foundations', week:'W01', learningRole:'Foundational', title:'The pump that changed public health', setting:'London cholera outbreak · 1854', context:'In September 1854 cholera struck the streets around Broad Street in Soho. John Snow marked each death on a street map together with the public water pumps—decades before the microbiology of cholera was settled—turning scattered addresses into a question about a shared source.', evidence:'CDC’s Principles of Epidemiology self-study course presents Snow’s 1854 investigation, in which cholera deaths were plotted around the Broad Street pump, as a founding exercise in field epidemiology.', takeaway:'Plotting deaths around water pumps exposed a spatial cluster that a table could hide.', trap:'A pattern suggests a hypothesis; it does not prove a cause on its own.', decision:'The parish board had to decide whether to disable a working public pump on pattern evidence alone—act early with imperfect evidence, or wait for proof while deaths continued.', question:'What extra evidence strengthens the pump hypothesis?', answer:'Compare households’ water sources—including exceptions such as brewery workers—not only distance from the pump.', keyNumbers:[{value:'1854',label:'Broad Street outbreak'},{value:'1',label:'pump implicated'},{value:'0',label:'pathogen certainty required to act'}], tags:['mapping','public health'], source:'CDC · Principles of Epidemiology', sourceUrl:'https://stacks.cdc.gov/view/cdc/6914', color:'blue' },
-  { id:'nightingale', topic:'Foundations', week:'W01', learningRole:'Foundational', title:'Mortality, made impossible to ignore', setting:'British military hospitals · 1850s', context:'Returning from the Crimean War hospitals, Florence Nightingale compiled monthly mortality statistics and redrew them as polar-area diagrams for official reports—aimed at ministers and army administrators, not statisticians.', evidence:'The University of York statistics archive reproduces Nightingale’s Crimean mortality tables, in which deaths from zymotic disease far exceeded deaths from wounds during the first winter of the campaign.', takeaway:'Florence Nightingale’s polar-area diagrams turned preventable deaths into an argument for sanitation.', trap:'Area grows faster than radius. A dramatic shape can exaggerate change.', decision:'The War Office had to decide whether hospital deaths were an unavoidable cost of war or a fixable failure of sanitation—and whether to fund reform on the strength of a chart.', question:'Why was the chart persuasive to decision-makers?', answer:'It paired a memorable visual pattern with a concrete action: improve hospital sanitation.', keyNumbers:[{value:'1858',label:'diagrams published'},{value:'1854–56',label:'Crimean data period'},{value:'3',label:'causes of death compared'}], tags:['history','health'], source:'University of York · Nightingale data', sourceUrl:'https://www.york.ac.uk/depts/maths/histstat/small.htm', color:'coral' },
+  { id:'nightingale', topic:'Foundations', week:'W01', learningRole:'Foundational', title:'Mortality, made impossible to ignore', setting:'British military hospitals · 1850s', context:'Returning from the Crimean War hospitals, Florence Nightingale compiled monthly mortality statistics and redrew them as polar-area diagrams for official reports—aimed at ministers and army administrators, not statisticians.', evidence:'The University of York statistics archive reproduces Nightingale’s Crimean mortality tables, in which deaths from zymotic disease far exceeded deaths from wounds during the first winter of the campaign.', takeaway:'Florence Nightingale’s polar-area diagrams turned preventable deaths into an argument for sanitation.', trap:'Area grows faster than radius. A dramatic shape can exaggerate change.', decision:'The War Office had to decide whether hospital deaths were an unavoidable cost of war or a fixable failure of sanitation—and whether to fund reform on the strength of a chart.', question:'Why was the chart persuasive to decision-makers?', answer:'It paired a memorable visual pattern with a concrete action: improve hospital sanitation.', keyNumbers:[{value:'1858',label:'diagrams published'},{value:'1854–56',label:'Crimean data period'},{value:'3',label:'causes of death compared'}], resources:[{type:'video',url:'https://www.instagram.com/p/DcF_JyoAmVH/',label:'Watch on Instagram'}], tags:['history','health'], source:'University of York · Nightingale data', sourceUrl:'https://www.york.ac.uk/depts/maths/histstat/small.htm', color:'coral' },
   { id:'commute', topic:'Foundations', week:'W01', learningRole:'Transfer', title:'How Singapore gets to work', setting:'Census transport modes · Singapore', context:'Singapore’s census asks employed residents how they usually travel to work. Summarised by planning area, the table becomes a planning tool: modal shares differ sharply between towns with different housing, income and MRT access.', evidence:'The data.gov.sg census table records employed residents’ usual mode of transport to work by planning area, so counts and modal shares can be compared across the island.', takeaway:'A planning-area comparison links everyday travel behaviour to housing and transport decisions.', trap:'Counts reward populous areas. Rates answer a different question.', decision:'Transport and housing agencies allocate capacity by area. Mapping counts instead of rates—or rates instead of counts—points investment at different neighbourhoods.', question:'Would you map counts or percentages?', answer:'Use percentages to compare modal preference; use counts to plan absolute capacity. Often show both.', tags:['Singapore','open data'], source:'data.gov.sg · Census transport dataset', sourceUrl:'https://data.gov.sg/datasets/d_1f8f5ec7201964e365c77551cab99503/view', color:'lime' },
   { id:'aircanada', topic:'AI agents', week:'W02', learningRole:'Current practice', title:'“The chatbot said so” was not a defence', setting:'Moffatt v. Air Canada · 2024', context:'A traveller asked Air Canada’s website chatbot about bereavement fares and was told he could apply for the discount after flying. The airline’s actual policy said otherwise, and it argued the chatbot was a separate entity responsible for its own words.', evidence:'The BC Civil Resolution Tribunal found Air Canada liable for negligent misrepresentation after its chatbot gave incorrect bereavement-fare guidance, ordering the airline to pay CAD $812.02.', takeaway:'A customer relied on incorrect bereavement-fare advice from a chatbot; the company remained responsible.', trap:'Treating an agent as an independent authority dissolves accountability.', decision:'Any organisation deploying a customer-facing agent must decide, before launch, who answers for its statements—the tribunal treated the chatbot’s advice as the company’s own.', question:'Where should a human checkpoint sit?', answer:'Before policy advice is shown or acted on, with a current source and escalation path attached.', keyNumbers:[{value:'2024',label:'tribunal decision'},{value:'$812.02',label:'ordered payment (CAD)'},{value:'1',label:'accountable company'}], tags:['governance','hallucination'], source:'CanLII · Moffatt v. Air Canada', sourceUrl:'https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html', color:'orange' },
   { id:'agent-boundary', topic:'AI agents', week:'W02', learningRole:'Current practice', title:'The analyst agent with one permission too many', setting:'Campaign CRM · governance scenario', context:'A marketing team gives an analyst agent CRM access to deduplicate a mailing list. The same credential also allows it to send campaigns and delete records—permissions nobody consciously granted for this task.', takeaway:'A useful agent may clean a list; it should not also publish, email and delete without bounded authority.', trap:'Automation bias grows after a streak of correct outputs.', decision:'Scoping authority is itself the decision: which actions the agent may take autonomously, which require approval, and which are excluded—settled before a streak of correct outputs builds false trust.', question:'Which permission would you remove first?', answer:'Irreversible actions such as sending and deletion should require explicit approval and logs.', tags:['privacy','human control'], source:'IMDA · Agentic AI Governance Framework', sourceUrl:'https://www.imda.gov.sg/resources/press-releases-factsheets-and-speeches/press-releases/2026/new-model-ai-governance-framework-for-agentic-ai', color:'blue' },
@@ -77,10 +109,13 @@ export default function Home() {
   const [topic, setTopic] = useState('All topics');
   const [learningRole, setLearningRole] = useState<LearningRoleFilter>('All paths');
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<CaseStudy | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
+  const [admin, setAdmin] = useState(false);
+  const [publishedOverrides, setPublishedOverrides] = useState<Record<string, CaseOverride>>({});
+  const [draftOverrides, setDraftOverrides] = useState<Record<string, CaseOverride>>({});
 
   useEffect(() => {
     const openCaseFromHash = () => {
@@ -88,30 +123,76 @@ export default function Home() {
       if (!match) return;
       const key = match[1].toLowerCase();
       const found = /^\d+$/.test(key) ? cases[Number(key) - 1] : cases.find((item) => item.id === key);
-      if (found) setSelected(found);
+      if (found) setSelectedId(found.id);
     };
     openCaseFromHash();
     window.addEventListener('hashchange', openCaseFromHash);
     return () => window.removeEventListener('hashchange', openCaseFromHash);
   }, []);
 
+  useEffect(() => {
+    const loadAdminState = window.setTimeout(() => {
+      setAdmin(new URLSearchParams(window.location.search).has('admin'));
+      try {
+        setDraftOverrides(JSON.parse(localStorage.getItem(overridesStorageKey) ?? '{}') as Record<string, CaseOverride>);
+      } catch { /* drafts unavailable in this browser */ }
+    }, 0);
+    fetch('/case-overrides.json')
+      .then((response) => response.ok ? response.json() : {})
+      .then((data) => setPublishedOverrides(data as Record<string, CaseOverride>))
+      .catch(() => { /* no published overrides file */ });
+    return () => window.clearTimeout(loadAdminState);
+  }, []);
+
+  const allCases = useMemo(() => cases.map((item) => applyOverride(applyOverride(item, publishedOverrides[item.id]), draftOverrides[item.id])), [publishedOverrides, draftOverrides]);
+  const selected = selectedId ? allCases.find((item) => item.id === selectedId) ?? null : null;
+
+  const saveDraftOverride = (id: string, override: CaseOverride | null) => {
+    setDraftOverrides((current) => {
+      const next = { ...current };
+      if (override && Object.keys(override).length > 0) next[id] = override; else delete next[id];
+      try { localStorage.setItem(overridesStorageKey, JSON.stringify(next)); } catch { /* edits stay in memory for this visit */ }
+      return next;
+    });
+  };
+
+  const exportOverrides = () => {
+    const merged: Record<string, CaseOverride> = { ...publishedOverrides };
+    for (const [id, override] of Object.entries(draftOverrides)) merged[id] = { ...merged[id], ...override };
+    const blob = new Blob([JSON.stringify(merged, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'case-overrides.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importOverrides = (file: File) => {
+    file.text().then((text) => {
+      const parsed = JSON.parse(text) as Record<string, CaseOverride>;
+      setDraftOverrides(parsed);
+      try { localStorage.setItem(overridesStorageKey, JSON.stringify(parsed)); } catch { /* edits stay in memory */ }
+    }).catch(() => window.alert('Could not read that file as a case-overrides JSON.'));
+  };
+
   const openCase = (item: CaseStudy) => {
-    setSelected(item);
+    setSelectedId(item.id);
     history.replaceState(null, '', `#case/${item.id}`);
   };
   const closeCase = () => {
-    setSelected(null);
+    setSelectedId(null);
     if (window.location.hash.startsWith('#case/')) history.replaceState(null, '', '#casebook');
   };
 
-  const filtered = useMemo(() => cases.filter((item) => {
+  const filtered = useMemo(() => allCases.filter((item) => {
     const topicMatch = topic === 'All topics' || item.topic === topic;
     const roleMatch = learningRole === 'All paths' || getLearningRole(item) === learningRole;
     const searchMatch = `${item.title} ${item.setting} ${item.context ?? ''} ${item.evidence ?? ''} ${item.tags.join(' ')}`.toLowerCase().includes(search.toLowerCase());
     return topicMatch && roleMatch && searchMatch;
-  }), [topic, learningRole, search]);
+  }), [allCases, topic, learningRole, search]);
 
-  const comparisonCases = compareIds.map((id) => cases.find((item) => item.id === id)).filter((item): item is CaseStudy => Boolean(item));
+  const comparisonCases = compareIds.map((id) => allCases.find((item) => item.id === id)).filter((item): item is CaseStudy => Boolean(item));
   const toggleCompare = (id: string) => setCompareIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 2 ? [...current, id] : current);
 
   return (
@@ -121,6 +202,14 @@ export default function Home() {
         <span className="courseCode">CDM2002 · AY 2026/27</span>
         <div className="navActions"><a href="#casebook">Casebook</a><a href="#path">Course path</a><a href="#challenge">Challenge</a></div>
       </nav>
+
+      {admin && <aside className="adminBar" aria-label="Admin tools">
+        <strong>ADMIN</strong>
+        <span>{Object.keys(draftOverrides).length} case{Object.keys(draftOverrides).length === 1 ? '' : 's'} with draft edits · drafts save to this browser only — export and commit <code>public/case-overrides.json</code> to publish for students</span>
+        <button onClick={exportOverrides}>Export overrides</button>
+        <label className="adminImport">Import<input type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) importOverrides(file); event.target.value = ''; }} /></label>
+        <button onClick={() => { if (window.confirm('Discard all draft edits saved in this browser?')) { setDraftOverrides({}); try { localStorage.removeItem(overridesStorageKey); } catch { /* nothing to clear */ } } }}>Clear drafts</button>
+      </aside>}
 
       <section className="hero">
         <div className="heroCopy">
@@ -161,7 +250,7 @@ export default function Home() {
           <div><button className="clearCompare" onClick={() => setCompareIds([])}>Clear</button><button className="openCompare" disabled={comparisonCases.length !== 2} onClick={() => setComparisonOpen(true)}>Compare the evidence ↗</button></div>
         </aside>}
         <div className="caseGrid">
-          {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.indexOf(item)} onOpen={() => openCase(item)} compareSelected={compareIds.includes(item.id)} compareDisabled={compareIds.length === 2 && !compareIds.includes(item.id)} onCompare={() => toggleCompare(item.id)} />)}
+          {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.findIndex((entry) => entry.id === item.id)} onOpen={() => openCase(item)} compareSelected={compareIds.includes(item.id)} compareDisabled={compareIds.length === 2 && !compareIds.includes(item.id)} onCompare={() => toggleCompare(item.id)} />)}
         </div>
         {filtered.length === 0 && <div className="emptyState"><strong>No evidence found.</strong><p>Try another keyword or reset the filters.</p><button onClick={() => { setTopic('All topics'); setLearningRole('All paths'); setSearch(''); }}>Reset the lab</button></div>}
       </section>
@@ -197,7 +286,7 @@ export default function Home() {
 
       <footer><div className="brand"><span className="brandMark">E/L</span><span>Evidence Lab</span></div><p>CDM2002 · Data Analytics and Visualisation<br />Trimester 1, AY 2026/27</p><a href="#top">Back to top ↑</a></footer>
 
-      {selected && <CaseDrawer item={selected} caseNumber={cases.indexOf(selected) + 1} onClose={closeCase} />}
+      {selected && <CaseDrawer key={selected.id} item={selected} caseNumber={cases.findIndex((entry) => entry.id === selected.id) + 1} admin={admin} draftEdited={Boolean(draftOverrides[selected.id])} baseItem={applyOverride(cases.find((entry) => entry.id === selected.id) as CaseStudy, publishedOverrides[selected.id])} onSaveOverride={(override) => saveDraftOverride(selected.id, override)} onClose={closeCase} />}
       {comparisonOpen && comparisonCases.length === 2 && <CompareDrawer items={[comparisonCases[0], comparisonCases[1]]} onClose={() => setComparisonOpen(false)} />}
     </main>
   );
@@ -221,10 +310,11 @@ function Visual({ type }: { type: number }) {
   return <div className="tableViz"><i /><i /><i /><i /><i /><i /></div>;
 }
 
-function CaseDrawer({ item, caseNumber, onClose }: { item: CaseStudy; caseNumber: number; onClose: () => void }) {
+function CaseDrawer({ item, caseNumber, admin, draftEdited, baseItem, onSaveOverride, onClose }: { item: CaseStudy; caseNumber: number; admin: boolean; draftEdited: boolean; baseItem: CaseStudy; onSaveOverride: (override: CaseOverride | null) => void; onClose: () => void }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const copyCaseLink = async () => {
     const link = `${window.location.origin}${window.location.pathname}#case/${item.id}`;
@@ -246,11 +336,12 @@ function CaseDrawer({ item, caseNumber, onClose }: { item: CaseStudy; caseNumber
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        if (editing) { setEditing(false); return; }
         onClose();
         return;
       }
       if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, textarea, summary, [tabindex]:not([tabindex="-1"])'));
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, textarea, select, summary, [tabindex]:not([tabindex="-1"])'));
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -269,12 +360,20 @@ function CaseDrawer({ item, caseNumber, onClose }: { item: CaseStudy; caseNumber
       document.body.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
-  }, [onClose]);
+  }, [onClose, editing]);
 
   return <div className="drawerBackdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
     <article ref={dialogRef} className={`caseDrawer ${item.color}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
       <button ref={closeRef} className="drawerClose" onClick={onClose} aria-label="Close case">×</button>
-      <p className="caseKicker">CASE {String(caseNumber).padStart(2,'0')} · {getCaseKind(item).toUpperCase()} · {getLearningRole(item).toUpperCase()} · {item.week} · {item.topic}</p><h2 id="drawer-title">{item.title}</h2><p className="drawerSetting">{item.setting}</p>
+      <p className="caseKicker">CASE {String(caseNumber).padStart(2,'0')} · {getCaseKind(item).toUpperCase()} · {getLearningRole(item).toUpperCase()} · {item.week} · {item.topic}{admin && draftEdited ? ' · DRAFT EDITED' : ''}</p><h2 id="drawer-title">{item.title}</h2><p className="drawerSetting">{item.setting}</p>
+      {item.resources && item.resources.length > 0 && <div className="resourceRow" aria-label="Additional resources">
+        {item.resources.map((resource) => <a key={resource.url} className={`resourceChip ${resource.type}`} href={resource.url} target="_blank" rel="noreferrer"><span aria-hidden="true">{resourceIcons[resource.type]}</span>{resource.label || resourceFallbackLabels[resource.type]}</a>)}
+      </div>}
+      {admin && <div className="adminDrawerTools">
+        <button onClick={() => setEditing((current) => !current)}>{editing ? 'Close editor' : '✎ Edit this case'}</button>
+        {draftEdited && <button onClick={() => { if (window.confirm('Reset this case to its published content?')) { onSaveOverride(null); setEditing(false); } }}>Reset draft</button>}
+      </div>}
+      {editing && <CaseEditor item={item} baseItem={baseItem} onSave={(override) => { onSaveOverride(override); setEditing(false); }} />}
       {(diagramAssets[item.id] || recreatedIds.has(item.id)) && <EvidenceFigure item={item} />}
       {item.keyNumbers && <div className="keyNumbers">{item.keyNumbers.map((number) => <div key={`${number.value}-${number.label}`}><strong>{number.value}</strong><span>{number.label}</span></div>)}</div>}
       <div className="drawerSections">
@@ -290,6 +389,67 @@ function CaseDrawer({ item, caseNumber, onClose }: { item: CaseStudy; caseNumber
       <button className="copyCaseLink" onClick={copyCaseLink} aria-live="polite">{copied ? 'Link copied ✓' : `Copy link to this case (#case/${item.id})`}</button>
       <CaseNotebook caseId={item.id} title={item.title} />
     </article>
+  </div>;
+}
+
+const editorFieldMeta: { field: EditableField; label: string; multiline: boolean; hint?: string }[] = [
+  { field:'title', label:'Title', multiline:false },
+  { field:'setting', label:'Setting', multiline:false },
+  { field:'context', label:'Case context', multiline:true, hint:'Optional — leave empty to hide the section' },
+  { field:'evidence', label:'Evidence statement', multiline:true, hint:'Optional — keep it narrow and source-supported; empty switches the drawer to “Teaching claim”' },
+  { field:'takeaway', label:'Takeaway (why it belongs in the course)', multiline:true },
+  { field:'trap', label:'Analytical trap', multiline:true },
+  { field:'decision', label:'Decision stake', multiline:true, hint:'Optional' },
+  { field:'question', label:'Question (Your turn)', multiline:false },
+  { field:'answer', label:'Defensible response', multiline:true },
+  { field:'source', label:'Source label', multiline:false },
+  { field:'sourceUrl', label:'Source URL', multiline:false },
+];
+
+function CaseEditor({ item, baseItem, onSave }: { item: CaseStudy; baseItem: CaseStudy; onSave: (override: CaseOverride | null) => void }) {
+  const readField = (source: CaseStudy, field: EditableField) => (source as unknown as Record<EditableField, string | undefined>)[field] ?? '';
+  const [values, setValues] = useState<Record<EditableField, string>>(() => Object.fromEntries(editableFields.map((field) => [field, readField(item, field)])) as Record<EditableField, string>);
+  const [resources, setResources] = useState<CaseResource[]>(item.resources ?? []);
+
+  const updateResource = (index: number, patch: Partial<CaseResource>) => setResources((current) => current.map((resource, position) => position === index ? { ...resource, ...patch } : resource));
+
+  const save = () => {
+    const override: CaseOverride = {};
+    for (const field of editableFields) {
+      const value = values[field].trim();
+      const baseValue = readField(baseItem, field);
+      if (value === baseValue) continue;
+      if (value === '' && !optionalFields.has(field)) continue;
+      override[field] = value;
+    }
+    const cleanResources = resources.map((resource) => ({ type: resource.type, url: resource.url.trim(), ...(resource.label?.trim() ? { label: resource.label.trim() } : {}) })).filter((resource) => resource.url);
+    if (JSON.stringify(cleanResources) !== JSON.stringify(baseItem.resources ?? [])) override.resources = cleanResources;
+    onSave(Object.keys(override).length > 0 ? override : null);
+  };
+
+  return <div className="caseEditor">
+    <p className="editorNote">Edits save as a draft in this browser. Use the admin bar to export <code>case-overrides.json</code>; committing that file to <code>public/</code> publishes the edits for everyone.</p>
+    {editorFieldMeta.map(({ field, label, multiline, hint }) => <label key={field} className="editorField">
+      <span>{label}{hint ? <em> · {hint}</em> : null}</span>
+      {multiline
+        ? <textarea rows={3} value={values[field]} onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))} />
+        : <input value={values[field]} onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))} />}
+    </label>)}
+    <div className="editorResources">
+      <span>ADDITIONAL RESOURCES · video, PDF or article links shown under the setting</span>
+      {resources.map((resource, index) => <div key={index} className="editorResourceRow">
+        <input placeholder="https://…" value={resource.url} onChange={(event) => updateResource(index, { url: event.target.value, type: detectResourceType(event.target.value) })} aria-label="Resource URL" />
+        <select value={resource.type} onChange={(event) => updateResource(index, { type: event.target.value as CaseResource['type'] })} aria-label="Resource type">
+          <option value="video">Video</option>
+          <option value="pdf">PDF</option>
+          <option value="article">Website / article</option>
+        </select>
+        <input placeholder="Label (optional)" value={resource.label ?? ''} onChange={(event) => updateResource(index, { label: event.target.value })} aria-label="Resource label" />
+        <button onClick={() => setResources((current) => current.filter((_, position) => position !== index))} aria-label="Remove this resource">×</button>
+      </div>)}
+      <button className="editorAddResource" onClick={() => setResources((current) => [...current, { type: 'article', url: '', label: '' }])}>+ Add link</button>
+    </div>
+    <div className="editorActions"><button className="editorSave" onClick={save}>Save draft</button></div>
   </div>;
 }
 

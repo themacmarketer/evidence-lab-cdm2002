@@ -39,7 +39,7 @@ function applyOverride(item: CaseStudy, override?: CaseOverride): CaseStudy {
   return next;
 }
 
-const resourceFallbackLabels: Record<CaseResource['type'], string> = { video: 'Watch the video', pdf: 'Open the PDF', article: 'Read the article' };
+const resourceFallbackLabels: Record<CaseResource['type'], string> = { video: 'Watch the video', pdf: 'Open the PDF document', article: 'Read the article' };
 const resourceIcons: Record<CaseResource['type'], string> = { video: '▶', pdf: 'PDF', article: '↗' };
 
 function detectResourceType(url: string): CaseResource['type'] {
@@ -219,29 +219,29 @@ export default function Home() {
       <section className="hero">
         <div className="heroCopy">
           <p className="eyebrow"><span /> DATA ANALYTICS &amp; VISUALISATION</p>
-          <h1>Don’t just read<br />the chart. <em>Question it.</em></h1>
-          <p className="lede">Build the idea, spot the pattern, then apply it to current data decisions hiding in campaigns, dashboards, queues, clicks and everyday life.</p>
+          <h1>Do not only read<br />the chart. <em>Question the chart.</em></h1>
+          <p className="lede">Build the concept. Identify the pattern. Apply the pattern to data decisions in campaigns, dashboards, and operational systems.</p>
           <a className="primaryButton" href="#casebook">Open the evidence lab <span>↘</span></a>
-          <div className="heroStats"><span><strong>{cases.length}</strong> cases &amp; scenarios</span><span><strong>9</strong> course topics</span><span><strong>1</strong> rule: verify</span></div>
+          <div className="heroStats"><span><strong>{cases.length}</strong> cases and scenarios</span><span><strong>9</strong> course topics</span><span><strong>1</strong> rule: Verify the data</span></div>
         </div>
         <div className="heroVisual" aria-label="A bar chart with a misleading truncated axis">
-          <div className="chartNote">Looks convincing.<br /><strong>Is it true?</strong></div>
+          <div className="chartNote">The chart appears convincing.<br /><strong>Is the chart true?</strong></div>
           <div className="plot"><span className="plotLabel plotLabelA">78%</span><span className="plotLabel plotLabelB">62%</span><span className="plotLabel plotLabelC">45%</span><div className="bar barA" /><div className="bar barB" /><div className="bar barC" /></div>
-          <div className="scribble">axis starts at 40!</div><div className="dataBadge">DATA ≠ TRUTH</div>
+          <div className="scribble">The vertical axis starts at 40.</div><div className="dataBadge">Data does not equal truth.</div>
         </div>
       </section>
 
       <section className="ticker" aria-label="Course themes"><div>COLLECT <span>◆</span> CLEAN <span>◆</span> QUESTION <span>◆</span> VISUALISE <span>◆</span> DECIDE <span>◆</span> VERIFY THE AGENT <span>◆</span> COLLECT <span>◆</span> CLEAN <span>◆</span></div></section>
 
       <section className="casebook" id="casebook">
-        <div className="sectionIntro"><p className="eyebrow dark"><span /> THE CASEBOOK</p><h2>Real cases.<br />Honest limits.</h2><p>Documented cases, data-backed illustrations and worked scenarios are labelled separately—so the evidence never claims more than its source.</p></div>
+        <div className="sectionIntro"><p className="eyebrow dark"><span /> THE CASEBOOK</p><h2>Real cases.<br />Explicit limits.</h2><p>The lab labels documented cases, data-backed illustrations, and worked scenarios separately. This distinction makes sure that the evidence does not claim more than the source.</p></div>
         <div className="learningGuide" aria-label="Guided learning paths">
-          <button onClick={() => { setLearningRole('Foundational'); setTopic('All topics'); setSearch(''); }}><span>01 · BUILD THE IDEA</span><strong>Foundational</strong><p>Landmark examples that make a core analytical principle visible and memorable.</p><em>{cases.filter((item) => getLearningRole(item) === 'Foundational').length} cases →</em></button>
-          <button onClick={() => { setLearningRole('Transfer'); setTopic('All topics'); setSearch(''); }}><span>02 · SPOT THE PATTERN</span><strong>Transfer</strong><p>Different settings that reveal the same recurring problem, trap or decision structure.</p><em>{cases.filter((item) => getLearningRole(item) === 'Transfer').length} cases →</em></button>
-          <button onClick={() => { setLearningRole('Current practice'); setTopic('All topics'); setSearch(''); }}><span>03 · APPLY IT NOW</span><strong>Current practice</strong><p>Recent, verified cases for testing the principle against today’s technologies and constraints.</p><em>{cases.filter((item) => getLearningRole(item) === 'Current practice').length} cases · 2024–26 →</em></button>
+          <button onClick={() => { setLearningRole('Foundational'); setTopic('All topics'); setSearch(''); }}><span>01 · BUILD THE IDEA</span><strong>Foundational</strong><p>Examine landmark examples that make a core analytical principle visible and clear.</p><em>{cases.filter((item) => getLearningRole(item) === 'Foundational').length} cases →</em></button>
+          <button onClick={() => { setLearningRole('Transfer'); setTopic('All topics'); setSearch(''); }}><span>02 · SPOT THE PATTERN</span><strong>Transfer</strong><p>Examine different settings that reveal the same recurring problem, trap, or decision structure.</p><em>{cases.filter((item) => getLearningRole(item) === 'Transfer').length} cases →</em></button>
+          <button onClick={() => { setLearningRole('Current practice'); setTopic('All topics'); setSearch(''); }}><span>03 · APPLY IT NOW</span><strong>Current practice</strong><p>Examine recent, verified cases to test the principle against current technologies and constraints.</p><em>{cases.filter((item) => getLearningRole(item) === 'Current practice').length} cases · 2024–2026 →</em></button>
         </div>
         <div className="filterBar">
-          <label className="searchBox"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search cases, settings or skills…" aria-label="Search cases" /></label>
+          <label className="searchBox"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search cases, settings, or skills…" aria-label="Search cases" /></label>
           <label className="topicSelect"><span>Topic</span><select value={topic} onChange={(event) => setTopic(event.target.value)}>{topics.map((item) => <option key={item}>{item}</option>)}</select></label>
         </div>
         <div className="learningFilters" aria-label="Filter by learning purpose">
@@ -251,42 +251,42 @@ export default function Home() {
         <div className="topicChips" aria-label="Filter by topic">{topics.map((item) => <button key={item} className={topic === item ? 'active' : ''} onClick={() => setTopic(item)} aria-pressed={topic === item}>{item}</button>)}</div>
         <p className="resultCount">Showing {filtered.length} of {cases.length} cases · {learningRole === 'All paths' ? 'all learning paths' : learningRole}</p>
         {comparisonCases.length > 0 && <aside className="compareTray" aria-label="Cases selected for comparison">
-          <div><span>CONTRASTING CASES · {comparisonCases.length}/2</span>{comparisonCases.map((item) => <button key={item.id} onClick={() => toggleCompare(item.id)} aria-label={`Remove ${item.title} from comparison`}>{item.title} ×</button>)}</div>
-          <div><button className="clearCompare" onClick={() => setCompareIds([])}>Clear</button><button className="openCompare" disabled={comparisonCases.length !== 2} onClick={() => setComparisonOpen(true)}>Compare the evidence ↗</button></div>
+          <div><span>CONTRASTING CASES · {comparisonCases.length}/2</span>{comparisonCases.map((item) => <button key={item.id} onClick={() => toggleCompare(item.id)} aria-label={`Remove ${item.title} from the comparison`}>{item.title} ×</button>)}</div>
+          <div><button className="clearCompare" onClick={() => setCompareIds([])}>Clear selection</button><button className="openCompare" disabled={comparisonCases.length !== 2} onClick={() => setComparisonOpen(true)}>Compare the evidence ↗</button></div>
         </aside>}
         <div className="caseGrid">
           {filtered.map((item) => <CaseCard key={item.id} item={item} index={cases.findIndex((entry) => entry.id === item.id)} onOpen={() => openCase(item)} compareSelected={compareIds.includes(item.id)} compareDisabled={compareIds.length === 2 && !compareIds.includes(item.id)} onCompare={() => toggleCompare(item.id)} />)}
         </div>
-        {filtered.length === 0 && <div className="emptyState"><strong>No evidence found.</strong><p>Try another keyword or reset the filters.</p><button onClick={() => { setTopic('All topics'); setLearningRole('All paths'); setSearch(''); }}>Reset the lab</button></div>}
+        {filtered.length === 0 && <div className="emptyState"><strong>The lab found no matching evidence.</strong><p>Type a different keyword. Or reset the filters.</p><button onClick={() => { setTopic('All topics'); setLearningRole('All paths'); setSearch(''); }}>Reset all filters</button></div>}
       </section>
 
       <section className="path" id="path">
-        <div className="pathHeading"><p className="eyebrow"><span /> YOUR COURSE PATH</p><h2>From raw data<br />to responsible action.</h2><p>Each stop adds a new question. The red thread never changes: what did the agent do, and how do you know it is right?</p></div>
-        <div className="weekRail">{weeks.map(([number,label], index) => <a key={number} href="#casebook" onClick={() => { setTopic(topicForWeek(index)); setLearningRole('All paths'); setSearch(''); }}><span>{number}</span><strong>{label}</strong><i>{index === weeks.length - 1 ? 'Pitch it' : 'Explore'}</i></a>)}</div>
+        <div className="pathHeading"><p className="eyebrow"><span /> YOUR COURSE PATH</p><h2>From raw data<br />to responsible action.</h2><p>Each weekly topic adds a new question. You must always answer two core questions. What action did the agent perform? How do you verify that the action is correct?</p></div>
+        <div className="weekRail">{weeks.map(([number,label], index) => <a key={number} href="#casebook" onClick={() => { setTopic(topicForWeek(index)); setLearningRole('All paths'); setSearch(''); }}><span>{number}</span><strong>{label}</strong><i>{index === weeks.length - 1 ? 'Pitch recommendation' : 'Explore topic'}</i></a>)}</div>
       </section>
 
       <section className="challenge" id="challenge">
         <div className="challengeCard">
           <p className="eyebrow dark"><span /> 60-SECOND CHALLENGE</p>
-          <h2>Which statement<br />is best supported?</h2>
-          <p className="experimentContext">Visitors were randomly assigned once during the same seven-day period. Tracking passed QA. The primary metric was account creation within 24 hours.</p>
-          <div className="experiment"><div><strong>A</strong><span>80 / 2,010 signed up</span><em>3.98%</em></div><div><strong>B</strong><span>87 / 1,980 signed up</span><em>4.39%</em></div></div>
-          <p className="experimentRule"><strong>Decision rule:</strong> ship only if the 95% interval is entirely above +0.5 percentage points and guardrails hold.</p>
+          <h2>Which statement<br />has the best evidence?</h2>
+          <p className="experimentContext">The system assigned visitors at random during one seven-day period. Tracking passed quality assurance. The primary metric recorded account creation within 24 hours.</p>
+          <div className="experiment"><div><strong>A</strong><span>Variant A: 80 / 2,010 signed up</span><em>3.98%</em></div><div><strong>B</strong><span>Variant B: 87 / 1,980 signed up</span><em>4.39%</em></div></div>
+          <p className="experimentRule"><strong>Deployment rule:</strong> Deploy Variant B only if the full 95% confidence interval is above +0.5 percentage points and all guardrail metrics remain stable.</p>
           <div className="answers">
             {[
-              ['A','B caused a reliable 10.4% lift.'],
-              ['B','B is the clear winner and should ship.'],
-              ['C','In this sample, B was 0.41 points higher; the experiment is inconclusive.'],
+              ['A','Variant B caused a reliable 10.4% improvement.'],
+              ['B','Variant B is superior. You must deploy Variant B.'],
+              ['C','In this sample, Variant B scored 0.41 percentage points higher. The experiment is inconclusive.'],
             ].map(([letter,label]) => <button key={letter} className={quizAnswer === letter ? 'chosen' : ''} onClick={() => setQuizAnswer(letter)}><span>{letter}</span>{label}</button>)}
           </div>
-          {quizAnswer && <div className={quizAnswer === 'C' ? 'feedback correct' : 'feedback'} role="status"><strong>{quizAnswer === 'C' ? 'Best supported.' : 'Too confident.'}</strong><p>{quizAnswer === 'C' ? 'B is +0.41 percentage points (+10.4% relative), but an approximate 95% interval runs from −0.83 to +1.66 points (p ≈ .51). The result does not meet the stated shipping rule.' : 'The observed relative difference is 10.4%, but the estimate is imprecise. This experiment does not establish a reliable effect or meet the stated shipping rule.'}</p></div>}
+          {quizAnswer && <div className={quizAnswer === 'C' ? 'feedback correct' : 'feedback'} role="status"><strong>{quizAnswer === 'C' ? 'Best supported statement.' : 'Conclusion too confident.'}</strong><p>{quizAnswer === 'C' ? 'Variant B shows a difference of +0.41 percentage points (+10.4% relative). However, an approximate 95% confidence interval spans from −0.83 to +1.66 percentage points (p ≈ .51). The result does not satisfy the deployment rule.' : 'The observed relative difference is 10.4%, but the estimate has high uncertainty. This experiment does not demonstrate a reliable effect. The result does not satisfy the deployment rule.'}</p></div>}
         </div>
-        <aside className="fieldRule"><span>FIELD RULE 04</span><blockquote>“An honest chart shows what you know—and leaves room for what you don’t.”</blockquote><p>Before you recommend: name the decision, denominator, uncertainty, trade-off and accountable human.</p></aside>
+        <aside className="fieldRule"><span>FIELD RULE 04</span><blockquote>“An honest chart shows what you know. It shows what you do not know.”</blockquote><p>Complete these steps before you submit a recommendation. Identify the decision. State the denominator. Quantify the uncertainty. Evaluate the trade-off. Name the accountable person.</p></aside>
       </section>
 
       <section className="agentChecklist" id="lab">
-        <div><p className="eyebrow"><span /> SUPERVISE THE PIPELINE</p><h2>Trust is a workflow,<br />not a feeling.</h2></div>
-        <ol><li><span>01</span><strong>Scope</strong><p>Bound the goal, data, tools and authority.</p></li><li><span>02</span><strong>Observe</strong><p>Keep intermediate steps, logs and source links.</p></li><li><span>03</span><strong>Verify</strong><p>Reconcile rows, totals, assumptions and charts.</p></li><li><span>04</span><strong>Decide</strong><p>A human owns the action and disclosure.</p></li></ol>
+        <div><p className="eyebrow"><span /> SUPERVISE THE PIPELINE</p><h2>Trust is a disciplined workflow.<br />Trust is not an assumption.</h2></div>
+        <ol><li><span>01</span><strong>Scope</strong><p>Define the objective, the source data, the tools, and the operational authority.</p></li><li><span>02</span><strong>Observe</strong><p>Record intermediate calculation steps, execution logs, and links to source documents.</p></li><li><span>03</span><strong>Verify</strong><p>Reconcile row counts, summary totals, modeling assumptions, and visual charts.</p></li><li><span>04</span><strong>Decide</strong><p>Assign a human owner for every downstream action and every public disclosure.</p></li></ol>
       </section>
 
       <footer><div className="brand"><span className="brandMark">E/L</span><span>Evidence Lab</span></div><p>CDM2002 · Data Analytics and Visualisation<br />Trimester 1, AY 2026/27</p><a href="#top">Back to top ↑</a></footer>
@@ -304,7 +304,7 @@ function CaseCard({ item, index, onOpen, compareSelected, compareDisabled, onCom
     <p className="cardTopic">{getCaseKind(item)} · {item.topic}</p><h3>{item.title}</h3><p className="cardSetting">{item.setting}</p>
     {item.update && <p className="cardUpdate">Updated {item.update.date}</p>}
     <div className="tagRow">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-    <div className="cardActions"><button className="compareToggle" onClick={onCompare} disabled={compareDisabled} aria-pressed={compareSelected} aria-label={`${compareSelected ? 'Remove' : 'Add'} ${item.title} ${compareSelected ? 'from' : 'to'} comparison`}>{compareSelected ? 'Selected ✓' : 'Compare'}</button><button className="inspectButton" onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button></div>
+    <div className="cardActions"><button className="compareToggle" onClick={onCompare} disabled={compareDisabled} aria-pressed={compareSelected} aria-label={`${compareSelected ? 'Remove' : 'Add'} ${item.title} ${compareSelected ? 'from' : 'to'} the comparison`}>{compareSelected ? 'Selected ✓' : 'Compare'}</button><button className="inspectButton" onClick={onOpen} aria-label={`Inspect ${item.title}`}>Inspect the evidence <span>↗</span></button></div>
   </article>;
 }
 
@@ -391,10 +391,10 @@ function CaseDrawer({ item, caseNumber, admin, draftEdited, baseItem, onSaveOver
         <section><span>THE ANALYTICAL TRAP</span><p>{item.trap}</p></section>
         {item.decision && <section><span>THE DECISION STAKE</span><p>{item.decision}</p></section>}
         {item.update && <section className="update"><span>SINCE THEN · UPDATED {item.update.date.toUpperCase()}</span><p>{item.update.summary}</p>{item.update.keyNumbers && <div className="updateNumbers">{item.update.keyNumbers.map((number) => <div key={`${number.value}-${number.label}`}><strong>{number.value}</strong><span>{number.label}</span></div>)}</div>}<a className="updateSource" href={item.update.sourceUrl} target="_blank" rel="noreferrer">Update source: {item.update.source} <span aria-hidden="true">↗</span></a></section>}
-        <section className="question"><span>YOUR TURN</span><h3>{item.question}</h3><details><summary>Reveal one defensible response</summary><p>{item.answer}</p></details></section>
+        <section className="question"><span>YOUR TURN</span><h3>{item.question}</h3><details><summary>Show one defensible response</summary><p>{item.answer}</p></details></section>
       </div>
-      <a className="sourceLink" href={item.sourceUrl} target={item.sourceUrl.startsWith('#') ? undefined : '_blank'} rel="noreferrer">{getCaseKind(item) === 'Worked scenario' ? 'Method / further reading' : 'Source / further reading'}: {item.source} <span>↗</span></a>
-      <button className="copyCaseLink" onClick={copyCaseLink} aria-live="polite">{copied ? 'Link copied ✓' : `Copy link to this case (#case/${item.id})`}</button>
+      <a className="sourceLink" href={item.sourceUrl} target={item.sourceUrl.startsWith('#') ? undefined : '_blank'} rel="noreferrer">{getCaseKind(item) === 'Worked scenario' ? 'Method and reference' : 'Source and reference'}: {item.source} <span>↗</span></a>
+      <button className="copyCaseLink" onClick={copyCaseLink} aria-live="polite">{copied ? 'The system copied the link ✓' : `Copy the link for this case (#case/${item.id})`}</button>
       <CaseNotebook caseId={item.id} title={item.title} />
     </article>
   </div>;
@@ -490,16 +490,16 @@ function CaseNotebook({ caseId, title }: { caseId: string; title: string }) {
     }
   }, [caseId, loaded, notes]);
 
-  const fields: { key: keyof CaseNotes; label: string; prompt: string }[] = [
-    { key:'fact', label:'Fact', prompt:'What is directly supported by the source?' },
-    { key:'inference', label:'Inference', prompt:'What does the evidence reasonably suggest?' },
-    { key:'hypothesis', label:'Hypothesis', prompt:'What would you test or verify next?' },
+  const fields: { key: keyof CaseNotes; label: string; prompt: string; placeholder: string }[] = [
+    { key:'fact', label:'Fact', prompt:'State the facts that the source directly supports.', placeholder:'Write a concise factual statement…' },
+    { key:'inference', label:'Inference', prompt:'State the conclusions that the evidence reasonably suggests.', placeholder:'Write a concise inference statement…' },
+    { key:'hypothesis', label:'Hypothesis', prompt:'Propose the next test to verify the claim.', placeholder:'Write a concise testable hypothesis…' },
   ];
 
   return <section className="caseNotebook" aria-labelledby={`notebook-${caseId}`}>
     <div className="notebookHeading"><div><span>CASE NOTEBOOK</span><h3 id={`notebook-${caseId}`}>Separate the claim.</h3></div><em aria-live="polite">{loaded ? 'Saved on this device' : 'Loading notes…'}</em></div>
-    <p>Write one statement in each box for “{title}”. Facts are source-supported; inferences interpret; hypotheses propose the next test.</p>
-    <div className="notebookGrid">{fields.map((field) => <label key={field.key}><strong>{field.label}</strong><span>{field.prompt}</span><textarea value={notes[field.key]} onChange={(event) => setNotes((current) => ({ ...current, [field.key]: event.target.value }))} rows={5} placeholder="Write a concise statement…" /></label>)}</div>
+    <p>Write one statement in each box for “{title}”. Record source-supported evidence in the Fact box. Record logical interpretations in the Inference box. Propose the next verification test in the Hypothesis box.</p>
+    <div className="notebookGrid">{fields.map((field) => <label key={field.key}><strong>{field.label}</strong><span>{field.prompt}</span><textarea value={notes[field.key]} onChange={(event) => setNotes((current) => ({ ...current, [field.key]: event.target.value }))} rows={5} placeholder={field.placeholder} /></label>)}</div>
   </section>;
 }
 
@@ -511,10 +511,10 @@ function CompareDrawer({ items, onClose }: { items: [CaseStudy, CaseStudy]; onCl
     ['Learning purpose', getLearningRole(left), getLearningRole(right)],
     ['Evidence claim', left.evidence ?? left.takeaway, right.evidence ?? right.takeaway],
     ['Analytical trap', left.trap, right.trap],
-    ['Decision stake', left.decision ?? 'Use the teaching prompt to define the decision before acting.', right.decision ?? 'Use the teaching prompt to define the decision before acting.'],
+    ['Decision stake', left.decision ?? 'Refer to the teaching prompt to define the decision before you act.', right.decision ?? 'Refer to the teaching prompt to define the decision before you act.'],
     ['Transferable lesson', left.takeaway, right.takeaway],
     ['Evidence boundary', getEvidenceStatus(left), getEvidenceStatus(right)],
-    ['Since then', left.update ? `${left.update.date}: ${left.update.summary}` : 'No later update recorded.', right.update ? `${right.update.date}: ${right.update.summary}` : 'No later update recorded.'],
+    ['Since then', left.update ? `${left.update.date}: ${left.update.summary}` : 'The course has recorded no recent updates.', right.update ? `${right.update.date}: ${right.update.summary}` : 'The course has recorded no recent updates.'],
   ];
 
   useEffect(() => {
@@ -538,12 +538,12 @@ function CompareDrawer({ items, onClose }: { items: [CaseStudy, CaseStudy]; onCl
 
   return <div className="drawerBackdrop compareBackdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
     <article ref={dialogRef} className="compareDrawer" role="dialog" aria-modal="true" aria-labelledby="compare-title">
-      <button ref={closeRef} className="drawerClose" onClick={onClose} aria-label="Close comparison">×</button>
-      <p className="caseKicker">CONTRASTING CASES · FIND THE SHARED STRUCTURE</p><h2 id="compare-title">Compare the evidence,<br />not the headlines.</h2>
+      <button ref={closeRef} className="drawerClose" onClick={onClose} aria-label="Close the comparison window">×</button>
+      <p className="caseKicker">CONTRASTING CASES · FIND THE SHARED STRUCTURE</p><h2 id="compare-title">Compare the evidence.<br />Do not compare the headlines.</h2>
       <div className="compareHeaders"><div><span>CASE A · {left.week}</span><h3>{left.title}</h3><p>{left.setting}</p></div><div><span>CASE B · {right.week}</span><h3>{right.title}</h3><p>{right.setting}</p></div></div>
       <div className="compareMatrix">{rows.map(([label, leftValue, rightValue]) => <section key={label}><h4>{label}</h4><p>{leftValue}</p><p>{rightValue}</p></section>)}</div>
-      <div className="compareSources"><a href={left.sourceUrl} target="_blank" rel="noreferrer">A source: {left.source} ↗</a><a href={right.sourceUrl} target="_blank" rel="noreferrer">B source: {right.source} ↗</a></div>
-      <aside className="comparePrompt"><span>TRANSFER PROMPT</span><strong>What principle survives when the organisation, technology and stakes change?</strong></aside>
+      <div className="compareSources"><a href={left.sourceUrl} target="_blank" rel="noreferrer">Source for Case A: {left.source} ↗</a><a href={right.sourceUrl} target="_blank" rel="noreferrer">Source for Case B: {right.source} ↗</a></div>
+      <aside className="comparePrompt"><span>TRANSFER PROMPT</span><strong>Which analytical principle remains valid when the organisation, technology, and operational stakes change?</strong></aside>
     </article>
   </div>;
 }
@@ -556,7 +556,7 @@ function EvidenceFigure({ item }: { item: CaseStudy }) {
     <figcaption>
       <span>{original ? 'ORIGINAL SOURCE IMAGE' : dataFaithful ? 'DATA-FAITHFUL RECREATION' : 'SOURCE-BASED SCHEMATIC'}</span>
       {original ? <a href={original.creditUrl} target="_blank" rel="noreferrer">{original.credit} · {original.license} ↗</a> : <a href={item.sourceUrl} target="_blank" rel="noreferrer">{dataFaithful ? 'Recreated from values in the cited source' : 'Teaching schematic derived from the cited source'} ↗</a>}
-      {item.id === 'challenger' && <small>Source record shown; the prompt asks learners to design the missing temperature-by-damage decision plot.</small>}
+      {item.id === 'challenger' && <small>This figure displays the historical source record. You must design the missing decision chart that plots temperature against damage severity.</small>}
     </figcaption>
   </figure>;
 }
@@ -573,16 +573,16 @@ function RecreatedDiagram({ id, compact }: { id: string; compact: boolean }) {
   if (id === 'berkeley') return <div className="reDiagram berkeleyDiagram"><span>AGGREGATE → DEPARTMENT VIEW</span><div className="aggregateBars"><p><i style={{width:'44%'}} /><b>Men 44%</b></p><p><i style={{width:'35%'}} /><b>Women 35%</b></p></div><div className="departmentRates">{[['A','62','82'],['B','63','68'],['C','37','34'],['D','33','35'],['E','28','24'],['F','6','7']].map(([dept,men,women]) => <p key={dept}><b>{dept}</b><span>M {men}%</span><span>W {women}%</span></p>)}</div><strong>Women’s rate is higher in 4 of 6 departments</strong><em>Exact rates</em></div>;
   if (id === 'digest') return <div className="reDiagram digestDiagram"><span>1936: FORECAST VS RESULT</span><div className="pollRows"><p><b>DIGEST</b><i style={{width:'57%'}}>L 57</i><i style={{width:'43%'}}>R 43</i></p><p><b>ACTUAL*</b><i style={{width:'38%'}}>L 38</i><i style={{width:'62%'}}>R 62</i></p></div><strong>*Two-party vote, rounded · 2.4m replies still failed</strong><em>Recreated</em></div>;
   if (id === 'google-flu') return <div className="reDiagram fluDiagram"><span>US FLU ACTIVITY · 2012–13 PEAK</span><div className="fluGrid"><b className="yLabel">RELATIVE ACTIVITY ↑</b><i className="actual" /><i className="estimate" /><b className="xLabel">TIME →</b></div><p><b>CDC baseline</b><b>GFT estimate ≈ 2×</b></p><em>Recreated</em></div>;
-  if (id === 'netflix-art') return <div className="reDiagram netflixDiagram"><span>SAME TITLE · DIFFERENT ART</span><div><i>A</i><i>B</i><i>C</i></div><strong>Randomise member → measure downstream</strong><em>Concept recreation</em></div>;
+  if (id === 'netflix-art') return <div className="reDiagram netflixDiagram"><span>SAME TITLE · DIFFERENT ART</span><div><i>A</i><i>B</i><i>C</i></div><strong>Randomise member allocation. Measure downstream retention.</strong><em>Concept recreation</em></div>;
   if (id === 'axis') return <div className="reDiagram axisDiagram"><span>TRUST SCORE</span><div><i style={{height:'74%'}}>81</i><i style={{height:'43%'}}>78</i></div><strong>Axis begins at 77</strong><em>Recreated</em></div>;
   if (id === 'funnel') return <div className="reDiagram funnelDiagram"><span>CAMPAIGN FUNNEL</span><i>12,400 visits</i><i>3,170 carts</i><i>294 sales</i><strong>Clicks rose · sales fell</strong><em>Recreated</em></div>;
-  if (id === 'cloudflare') return <div className="reDiagram pipelineDiagram"><span>CONFIG PIPELINE</span><div><i>Rows ×2</i><b>→</b><i className="danger">200+ features</i><b>→</b><i>Outage</i></div><strong>Missing: row-count check + size guard before propagation</strong><em>Recreated</em></div>;
-  if (id === 'ai-overviews') return <div className="reDiagram overviewDiagram"><span>CORRECT VS GROUNDED</span><div><i>91% correct</i><b>vs</b><i className="danger">67% supported</i></div><strong>A right answer is not a supported answer</strong><em>Recreated</em></div>;
-  if (id === 'simplygo') return <div className="reDiagram simplygoDiagram"><span>FARE-GATE MOMENT</span><div><b>$?.??</b><i>BALANCE NOT SHOWN</i></div><strong>One missing glance changed trust</strong><em>Recreated</em></div>;
-  if (id === 'mycity') return <div className="reDiagram latencyDiagram"><span>P90 RESPONSE TIME</span><div><i style={{width:'78%'}}>12.4s</i><i style={{width:'100%'}}>16.2s</i></div><strong>Correctness × latency × recourse</strong><em>Recreated</em></div>;
-  if (id === 'zillow') return <div className="reDiagram zillowDiagram"><span>UNIT ECONOMICS</span><div><i>Q2</i><b>1,200 bps swing</b><i>Q4</i></div><strong>Forecast error became inventory risk</strong><em>Recreated</em></div>;
-  if (id === 'ai-verify') return <div className="reDiagram assuranceDiagram"><span>ASSURANCE WORKFLOW</span><div><i>Use</i><b>→</b><i>Risk</i><b>→</b><i>Test</i><b>→</b><i>Log</i><b>→</b><i className="owner">Owner</i></div><strong>A passed test is evidence—not blanket certification</strong><em>Teaching schematic</em></div>;
-  if (id === 'genai-catalog') return <div className="reDiagram catalogDiagram"><span>VENDOR EVIDENCE AUDIT</span><div><b>1,302</b><i>selected examples</i><strong>÷ ?</strong><i>population denominator</i></div><strong>Many stories ≠ a representative success rate</strong><em>Source critique</em></div>;
+  if (id === 'cloudflare') return <div className="reDiagram pipelineDiagram"><span>CONFIG PIPELINE</span><div><i>Rows ×2</i><b>→</b><i className="danger">200+ features</i><b>→</b><i>Outage</i></div><strong>Missing safeguard: Validate row counts and file sizes before data propagates.</strong><em>Recreated</em></div>;
+  if (id === 'ai-overviews') return <div className="reDiagram overviewDiagram"><span>CORRECT VS GROUNDED</span><div><i>91% correct</i><b>vs</b><i className="danger">67% supported</i></div><strong>A correct answer does not guarantee a supported source.</strong><em>Recreated</em></div>;
+  if (id === 'simplygo') return <div className="reDiagram simplygoDiagram"><span>FARE-GATE MOMENT</span><div><b>$?.??</b><i>BALANCE NOT SHOWN</i></div><strong>The absence of an immediate fare display damaged user trust.</strong><em>Recreated</em></div>;
+  if (id === 'mycity') return <div className="reDiagram latencyDiagram"><span>P90 RESPONSE TIME</span><div><i style={{width:'78%'}}>12.4s</i><i style={{width:'100%'}}>16.2s</i></div><strong>Evaluate correctness, response latency, and human escalation.</strong><em>Recreated</em></div>;
+  if (id === 'zillow') return <div className="reDiagram zillowDiagram"><span>UNIT ECONOMICS</span><div><i>Q2</i><b>1,200 bps swing</b><i>Q4</i></div><strong>Prediction error created balance-sheet inventory risk.</strong><em>Recreated</em></div>;
+  if (id === 'ai-verify') return <div className="reDiagram assuranceDiagram"><span>ASSURANCE WORKFLOW</span><div><i>Use</i><b>→</b><i>Risk</i><b>→</b><i>Test</i><b>→</b><i>Log</i><b>→</b><i className="owner">Owner</i></div><strong>A passing test provides bounded evidence. A passing test does not certify complete safety.</strong><em>Teaching schematic</em></div>;
+  if (id === 'genai-catalog') return <div className="reDiagram catalogDiagram"><span>VENDOR EVIDENCE AUDIT</span><div><b>1,302</b><i>selected examples</i><strong>÷ ?</strong><i>population denominator</i></div><strong>Selected customer stories do not prove a representative success rate.</strong><em>Source critique</em></div>;
   return null;
 }
 
@@ -616,10 +616,10 @@ function getCaseKind(item: CaseStudy) {
 
 function getEvidenceStatus(item: CaseStudy) {
   const kind = getCaseKind(item);
-  if (kind === 'Worked scenario') return 'Illustrative teaching scenario. Treat its figures and decisions as pedagogical unless the card explicitly identifies an observed source value.';
-  if (kind === 'Data-backed illustration') return 'The linked dataset supports the setting. Reproduce the relevant slice before making a numerical or causal claim.';
-  if (item.evidence) return 'Documented case with a case-specific source. The record supports the evidence statement; the takeaway remains an analytical interpretation.';
-  return 'Documented case with a linked source. The statement below is the course’s teaching interpretation, not a direct quotation or causal finding.';
+  if (kind === 'Worked scenario') return 'This card describes an illustrative teaching scenario. Treat all figures and decisions as pedagogical exercises. Do not treat these figures as observed data unless the text explicitly cites a primary source.';
+  if (kind === 'Data-backed illustration') return 'The linked dataset supports the scenario setting. Reproduce the relevant data slice before you make a numerical or causal claim.';
+  if (item.evidence) return 'This card describes a documented case with a verified source. The historical record supports the evidence statement. The takeaway is an analytical interpretation.';
+  return 'This card describes a documented case with a linked source. The statement below is a course teaching interpretation. It is not a direct quotation. It is not a proven causal finding.';
 }
 
 function visualIndex(id: string) {
